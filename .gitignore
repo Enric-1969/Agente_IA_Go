@@ -1,0 +1,17 @@
+# Variables de entorno
+.env
+
+# Ejecutables y compilados
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Archivos de configuración local y datos
+config.json
+mis_vectorstores/*.db
+mis_vectorstores/*.sqlite
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
