@@ -2,49 +2,70 @@ package main
 
 import "sync"
 
+// --- ENUMERACIONES Y TIPOS DE DOMINIO ---
+
+type TipoRuta string
+
+const (
+	RutaRAG         TipoRuta = "rag"
+	RutaHerramienta TipoRuta = "herramienta"
+	RutaGeneral     TipoRuta = "general"
+)
+
+// --- CONFIGURACIÓN DE LA APLICACIÓN ---
+
 type ConfigApp struct {
 	RutaDocsOrigen   string
 	RutaVectorstores string
 	GroqAPIKey       string
 	GroqModel        string
-	GroqModelosVal   []string // Convertido a slice para manejo directo
+	GroqModelosVal   []string
 }
 
-// GestorModelos administra el estado dinámico, el bloqueo por hilos y la rotación
+// --- GESTIÓN, ESTADO Y CLIENTE DE MODELOS ---
+
+// GestorModelos es la fuente única de verdad para el estado de la API y las peticiones
 type GestorModelos struct {
 	mu             sync.Mutex
+	APIKey         string
+	ModeloActivo   string
 	ModelosValidos []string
-	apiKey         string
 	recargando     bool
 }
 
-// Mensaje representa el formato estándar de conversación
+type CatalogoModelos struct {
+	Data []struct {
+		ID     string `json:"id"`
+		Active bool   `json:"active"`
+	} `json:"data"`
+}
+
+// --- ESTRUCTURAS DE COMUNICACIÓN API GROQ ---
+
 type Mensaje struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// PeticionGroq define el cuerpo enviando a la API de Groq
 type PeticionGroq struct {
 	Model       string    `json:"model"`
 	Messages    []Mensaje `json:"messages"`
 	Temperature float64   `json:"temperature"`
 }
 
-// RespuestaGroq procesa la devolución de Groq
 type RespuestaGroq struct {
 	Choices []struct {
 		Message Mensaje `json:"message"`
 	} `json:"choices"`
 }
 
-// ClasificacionDominio captura la decisión tomada por el router RAG
+// --- RAG Y ALMACENAMIENTO VECTORIAL ---
+
 type ClasificacionDominio struct {
 	Dominio     string `json:"dominio"`
 	Explicacion string `json:"explicacion"`
 }
 
-// ChunkTexto representa el fragmento de texto procesado con su vector
 type ChunkTexto struct {
 	ID        string    `json:"id"`
 	Origen    string    `json:"origen"`
@@ -53,14 +74,7 @@ type ChunkTexto struct {
 	HashMD5   string    `json:"hash_md5"`
 }
 
-// CatalogoModelos mapea la respuesta del endpoint de modelos de Groq
-type CatalogoModelos struct {
-	Data []struct {
-		ID     string `json:"id"`
-		Active bool   `json:"active"`
-	} `json:"data"`
-}
-
+// Se usa en config_rutas_locales.go para la lectura exclusiva del sistema de archivos
 type ConfigRutas struct {
 	RutaDocsOrigen   string
 	RutaVectorstores string
