@@ -1,12 +1,21 @@
 package main
 
-// ConfigApp almacena las variables del archivo .env
+import "sync"
+
 type ConfigApp struct {
 	RutaDocsOrigen   string
 	RutaVectorstores string
 	GroqAPIKey       string
 	GroqModel        string
-	GroqModelosVal   string
+	GroqModelosVal   []string // Convertido a slice para manejo directo
+}
+
+// GestorModelos administra el estado dinámico, el bloqueo por hilos y la rotación
+type GestorModelos struct {
+	mu             sync.Mutex
+	ModelosValidos []string
+	apiKey         string
+	recargando     bool
 }
 
 // Mensaje representa el formato estándar de conversación
