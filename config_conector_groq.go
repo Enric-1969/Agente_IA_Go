@@ -35,7 +35,7 @@ func EnviarConsultaGroq(gestor *GestorModelos, mensajes []Mensaje) (string, erro
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+gestor.apiKey)
+		req.Header.Set("Authorization", "Bearer "+gestor.APIKey)
 
 		resp, err := client.Do(req)
 
