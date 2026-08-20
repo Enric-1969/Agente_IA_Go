@@ -10,9 +10,9 @@ import (
 )
 
 // NuevoGestorModelos genera el gestor e inicializa la lista inicial de modelos probados.
-func NuevoGestorModelos(apiKey string) *GestorModelos {
-	gm := &GestorModelos{apiKey: apiKey}
-	gm.ModelosValidos = ObtenerModelosValidos(apiKey)
+func NuevoGestorModelos(APIKey string) *GestorModelos {
+	gm := &GestorModelos{APIKey: APIKey}
+	gm.ModelosValidos = ObtenerModelosValidos(APIKey)
 	return gm
 }
 
@@ -58,7 +58,7 @@ func (gm *GestorModelos) ReportarFalloYRotar(modeloFallido string) string {
 	if debeBuscarNuevos {
 		fmt.Println("⚠️ Queda solo 1 modelo en la reserva. Generando nueva lista en segundo plano...")
 		go func() {
-			nuevosModelos := ObtenerModelosValidos(gm.apiKey)
+			nuevosModelos := ObtenerModelosValidos(gm.APIKey)
 
 			gm.mu.Lock()
 			defer gm.mu.Unlock()
