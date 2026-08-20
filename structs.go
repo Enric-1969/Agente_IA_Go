@@ -51,3 +51,8 @@ type CatalogoModelos struct {
 		Active bool   `json:"active"`
 	} `json:"data"`
 }
+
+type ConfigRutas struct {
+	RutaDocsOrigen   string
+	RutaVectorstores string
+}
