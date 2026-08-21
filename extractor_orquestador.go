@@ -18,10 +18,8 @@ func ExtraerTextoDeArchivo(ruta string) (string, error) {
 		return ExtraerTextoExcel(ruta)
 	case ".docx":
 		return ExtraerTextoWord(ruta)
-
 	case ".pdf":
-		return "", fmt.Errorf("extractor de PDF (.pdf) pendiente de implementacion")
-
+		return ExtraerTextoPDF(ruta)
 	default:
 		return "", fmt.Errorf("formato no soportado: %s", ext)
 	}
