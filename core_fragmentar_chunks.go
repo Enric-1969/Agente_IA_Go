@@ -1,49 +1,59 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
-// --- FRAGMENTACIÓN Y CREACIÓN DE CHUNKS ---
-
-func DividirTextoEnChunks(texto string, tamanio, solape int) []string {
-	var chunks []string
-	runas := []rune(texto)
-	total := len(runas)
-	if total == 0 {
-		return chunks
+// FragmentarTextoEnChunks divide un texto en bloques usando runas UTF-8
+// para no romper caracteres multibyte (ñ, tildes, símbolos).
+func FragmentarTextoEnChunks(texto string, tamanoChunk int, solape int) []string {
+	textoLimpio := strings.TrimSpace(texto)
+	if textoLimpio == "" {
+		return nil
 	}
 
-	for inicio := 0; inicio < total; {
-		fin := inicio + tamanio
-		if fin > total {
-			fin = total
+	runas := []rune(textoLimpio)
+	totalRunas := len(runas)
+
+	if totalRunas <= tamanoChunk {
+		return []string{textoLimpio}
+	}
+
+	var chunks []string
+	paso := tamanoChunk - solape
+	if paso <= 0 {
+		paso = 1
+	}
+
+	for i := 0; i < totalRunas; i += paso {
+		fin := i + tamanoChunk
+		if fin > totalRunas {
+			fin = totalRunas
 		}
-		chunks = append(chunks, string(runas[inicio:fin]))
-		if fin == total {
+
+		chunk := string(runas[i:fin])
+		chunks = append(chunks, chunk)
+
+		if fin == totalRunas {
 			break
 		}
-		inicio += (tamanio - solape)
 	}
+
 	return chunks
 }
 
+// ConvertirTextoAChunks toma el texto completo de un archivo, lo trocea y
+// devuelve la colección reutilizando la estructura ChunkTexto de structs.go.
 func ConvertirTextoAChunks(relPath, texto string) []ChunkTexto {
+	bloques := FragmentarTextoEnChunks(texto, 1000, 150)
 	var resultado []ChunkTexto
-	fragmentos := DividirTextoEnChunks(texto, 1000, 200)
 
-	for i, frag := range fragmentos {
-		if len(strings.TrimSpace(frag)) <= 10 {
-			continue
+	for _, bloque := range bloques {
+		if len(strings.TrimSpace(bloque)) > 10 {
+			resultado = append(resultado, ChunkTexto{
+				Origen:    relPath,
+				Contenido: bloque,
+				HashMD5:   GenerarHashMD5(bloque), // Aprovechamos la función de core_manifest_hash.go
+			})
 		}
-		resultado = append(resultado, ChunkTexto{
-			ID:        fmt.Sprintf("%s_chunk_%d", relPath, i),
-			Origen:    relPath,
-			Contenido: frag,
-			HashMD5:   GenerarHashMD5(frag),
-			Embedding: []float32{},
-		})
 	}
 	return resultado
 }
