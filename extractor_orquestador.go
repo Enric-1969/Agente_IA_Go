@@ -15,8 +15,7 @@ func ExtraerTextoDeArchivo(ruta string) (string, error) {
 	case ".txt", ".md", ".go", ".py", ".html", ".css", ".js", ".json", ".sql", ".sh", ".bat":
 		return ExtraerTextoPlanoOMarkdown(ruta)
 	case ".xlsx", ".xlsm":
-		return "", fmt.Errorf("extractor de Excel (.xlsx) pendiente de implementacion")
-
+		return ExtraerTextoExcel(ruta)
 	case ".docx":
 		return "", fmt.Errorf("extractor de Word (.docx) pendiente de implementacion")
 
