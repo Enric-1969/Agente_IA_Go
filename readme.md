@@ -54,6 +54,8 @@ RUTA_VECTORSTORES="./mis_vectorstores"
 Asegúrate de contar con Go 1.24+ instalado. Para descargar e instalar las dependencias externas del proyecto, ejecuta:
 
 ```bash
-### Lectura y procesamiento de archivos Excel (.xlsx, .xlsm)
-go get [github.com/xuri/excelize/v2](https://github.com/xuri/excelize/v2)
+# Lectura y procesamiento de archivos Excel (.xlsx, .xlsm)
+go get github.com/xuri/excelize/v2
+# Lectura y procesamiento de archivos PDF (.pdf)
+go get github.com/ledongthuc/pdf
 ```
