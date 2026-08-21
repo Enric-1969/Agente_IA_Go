@@ -17,7 +17,7 @@ func ExtraerTextoDeArchivo(ruta string) (string, error) {
 	case ".xlsx", ".xlsm":
 		return ExtraerTextoExcel(ruta)
 	case ".docx":
-		return "", fmt.Errorf("extractor de Word (.docx) pendiente de implementacion")
+		return ExtraerTextoWord(ruta)
 
 	case ".pdf":
 		return "", fmt.Errorf("extractor de PDF (.pdf) pendiente de implementacion")
