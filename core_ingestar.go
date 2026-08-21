@@ -38,13 +38,13 @@ func ProcesarDominioIngesta(rutaOrigen, rutaDestinoVS string) ([]ChunkTexto, err
 			return nil
 		}
 
-		contenido, err := os.ReadFile(path)
-		if err != nil || strings.TrimSpace(string(contenido)) == "" {
-			return nil
+		textoExtraido, err := ExtraerTextoDeArchivo(path)
+		if err != nil || strings.TrimSpace(textoExtraido) == "" {
+			return nil // Si falla la lectura o está vacío, saltamos al siguiente archivo
 		}
 
 		fmt.Printf("⚡ Detectado cambio o nuevo archivo: %s\n", relPath)
-		chunks := ConvertirTextoAChunks(relPath, string(contenido))
+		chunks := ConvertirTextoAChunks(relPath, textoExtraido)
 		todosLosChunks = append(todosLosChunks, chunks...)
 
 		nuevoManifest[relPath] = hashActual
