@@ -11,15 +11,17 @@ import (
 
 func ProcesarDominioIngesta(rutaOrigen, rutaDestinoVS string) ([]ChunkTexto, error) {
 	rutaManifest := filepath.Join(rutaDestinoVS, "manifest.json")
-	manifest := CargarManifest(rutaManifest)
+	manifest, err := CargarManifest(rutaManifest)
+	if err != nil {
+		return nil, fmt.Errorf("error al cargar manifest: %w", err)
+	}
 	nuevoManifest := make(map[string]string)
 	for k, v := range manifest {
 		nuevoManifest[k] = v
 	}
 
 	var todosLosChunks []ChunkTexto
-
-	err := filepath.Walk(rutaOrigen, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(rutaOrigen, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
