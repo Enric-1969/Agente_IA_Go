@@ -6,23 +6,25 @@
 
 ```text
 Agente_IA_Go/
-├── structs.go                  # Definición centralizada de las estructuras de datos
-├── config_rutas_locales.go      # Escaneo dinámico de la unidad compartida (ej. Z:\Files_IA)
-├── config_validador.go          # Verificación de compatibilidad con Tool Calling
-├── config_crea_lista_models.go  # Escaneo concurrente y rotación del catálogo activo de Groq
-├── config_conector_groq.go      # Cliente HTTP nativo, reconexión y fallback de modelos
-├── core_manifest_hash.go        # Gestión de manifest.json, firmas MD5 y validación de archivos
-├── core_fragmentar_chunks.go    # Fragmentación de texto UTF-8 seguro (runas) y solape (overlap)
-├── core_ingestar.go             # Coordinador principal del flujo de ingesta incremental
-├── core_router.go               # Clasificación de la pregunta por dominio técnico
-├── core_prompts.go              # Plantillas de sistema y prompts para el agente
-├── extractor_orquestador.go     # Despachador principal de ingesta según extensión del archivo
-├── extractor_texto.go           # Extracción para archivos .txt, .md y código fuente
-├── extractor_excel.go           # Extracción estructurada multipestaña para .xlsx y .xlsm
-├── extractor_word.go            # Extracción de contenido estructurado para .docx
-├── extractor_pdf.go             # Extracción y filtrado inteligente de páginas para .pdf
-├── main.go                      # Punto de entrada y bucle principal de la aplicación
-├── mis_vectorstores/            # Bases de datos vectoriales y manifiestos por dominio
+├── structs.go                 # Definición centralizada de las estructuras de datos
+├── config_rutas_locales.go     # Escaneo dinámico de carpetas de entrada y almacenamiento
+├── config_validador.go         # Verificación de compatibilidad con Tool Calling
+├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
+├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
+├── core_manifest_hash.go       # Gestión de manifest.json, firmas MD5 y validación de cambios
+├── core_fragmentar_chunks.go   # Fragmentación UTF-8 segura (runas) y solape de texto
+├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
+├── core_vectorstore.go        # VectorStore nativo en memoria, persistencia .gob y similitud coseno
+├── core_ingestar.go            # Coordinador principal de ingesta con control de memoria (>50MB)
+├── core_router.go              # Clasificación de preguntas por dominio técnico
+├── core_prompts.go             # Plantillas de sistema y prompts para el agente
+├── extractor_orquestador.go    # Despachador principal de ingesta según extensión
+├── extractor_texto.go          # Extracción para archivos .txt, .md y código fuente
+├── extractor_excel.go          # Extracción estructurada multipestaña para .xlsx y .xlsm
+├── extractor_word.go           # Extracción de contenido estructurado para .docx
+├── extractor_pdf.go            # Extracción nativa de PDF con fallback OCR WASM concurrente
+├── main.go                     # CLI interactiva y bucle de orquestación RAG
+├── storage/                    # Archivos de persistencia (.gob y manifest.json)
 ├── .env
 ├── .env.example
 ├── .gitignore
@@ -42,6 +44,10 @@ GROQ_API_KEY="gsk_tu_clave_aqui"
 GROQ_MODEL='qwen/qwen3.6-27b'
 GROQ_MODELOS_VALIDOS='qwen/qwen3.6-27b'
 
+# Configuración de Embeddings Locales (Ollama)
+OLLAMA_EMBEDDING_MODEL="all-minilm"
+OLLAMA_HOST="http://localhost:11434"
+
 # Rutas configurables del sistema
 # Windows local/red: "Z:/Files_IA" o "C:/MisDocumentos/IA"
 # Linux/macOS: "/var/data/files_ia"
@@ -58,4 +64,6 @@ Asegúrate de contar con Go 1.24+ instalado. Para descargar e instalar las depen
 go get github.com/xuri/excelize/v2
 # Lectura y procesamiento de archivos PDF (.pdf)
 go get github.com/ledongthuc/pdf
+# Iniciar el servicio y descargar el modelo de embeddings ligero
+ollama pull all-minilm
 ```
