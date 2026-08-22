@@ -1,4 +1,3 @@
-// (lectura de .docx)
 package main
 
 import (
@@ -9,24 +8,7 @@ import (
 	"strings"
 )
 
-type Document struct {
-	XMLName xml.Name `xml:"document"`
-	Body    Body     `xml:"body"`
-}
-
-type Body struct {
-	Paragraphs []Paragraph `xml:"p"`
-}
-
-type Paragraph struct {
-	Runs []Run `xml:"r"`
-}
-
-type Run struct {
-	Text string `xml:"t"`
-}
-
-// ExtraerTextoWord procesa archivos .docx extrayendo el contenido de word/document.xml
+// ExtraerTextoWord extrae tanto el texto de párrafos directos como el contenido de tablas.
 func ExtraerTextoWord(ruta string) (string, error) {
 	r, err := zip.OpenReader(ruta)
 	if err != nil {
@@ -63,15 +45,39 @@ func ExtraerTextoWord(ruta string) (string, error) {
 	}
 
 	var sb strings.Builder
+
+	// 1. Extraer párrafos principales
 	for _, p := range doc.Body.Paragraphs {
 		var pText strings.Builder
-		for _, r := range p.Runs {
-			pText.WriteString(r.Text)
+		for _, t := range p.Text {
+			pText.WriteString(t.Value)
 		}
 		linea := strings.TrimSpace(pText.String())
 		if linea != "" {
 			sb.WriteString(linea)
 			sb.WriteString("\n")
+		}
+	}
+
+	// 2. Extraer contenido dentro de tablas
+	for _, tbl := range doc.Body.Tables {
+		for _, row := range tbl.Rows {
+			var rowText []string
+			for _, cell := range row.Cells {
+				var cellText strings.Builder
+				for _, p := range cell.Paragraphs {
+					for _, t := range p.Text {
+						cellText.WriteString(t.Value)
+					}
+				}
+				if txt := strings.TrimSpace(cellText.String()); txt != "" {
+					rowText = append(rowText, txt)
+				}
+			}
+			if len(rowText) > 0 {
+				sb.WriteString(strings.Join(rowText, " | "))
+				sb.WriteString("\n")
+			}
 		}
 	}
 
