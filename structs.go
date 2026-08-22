@@ -1,6 +1,9 @@
 package main
 
-import "sync"
+import (
+	"encoding/xml"
+	"sync"
+)
 
 // --- ENUMERACIONES Y TIPOS DE DOMINIO ---
 
@@ -78,4 +81,34 @@ type ChunkTexto struct {
 type ConfigRutas struct {
 	RutaDocsOrigen   string
 	RutaVectorstores string
+}
+
+type TextRun struct {
+	Value string `xml:",chardata"`
+}
+
+type Paragraph struct {
+	Text []TextRun `xml:"r>t"`
+}
+
+type TableCell struct {
+	Paragraphs []Paragraph `xml:"p"`
+}
+
+type TableRow struct {
+	Cells []TableCell `xml:"tc"`
+}
+
+type Table struct {
+	Rows []TableRow `xml:"tr"`
+}
+
+type DocumentBody struct {
+	Paragraphs []Paragraph `xml:"p"`
+	Tables     []Table     `xml:"tbl"`
+}
+
+type Document struct {
+	XMLName xml.Name     `xml:"document"`
+	Body    DocumentBody `xml:"body"`
 }
