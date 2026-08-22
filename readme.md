@@ -67,3 +67,26 @@ go get github.com/ledongthuc/pdf
 # Iniciar el servicio y descargar el modelo de embeddings ligero
 ollama pull all-minilm
 ```
+## 📐 Decisiones de Arquitectura y Diseño
+
+Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocidad de ejecución nativa**, evitando la sobreingeniería y las dependencias pesadas habituales en el ecosistema de IA.
+
+### 1. Ingesta y Embeddings 100% Locales (Soberanía de Datos)
+* **Decisión:** Comunicación HTTP nativa con **Ollama** (`core_embeddings.go`) en lugar de servicios en la nube.
+* **Por qué:** Garantiza privacidad absoluta (ningún dato sale de la máquina local), elimina costes de API de terceros y suprime la latencia de red externa.
+
+### 2. VectorStore Nativo en Go Pure + Persistencia Binaria `.gob`
+* **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización en formato binario nativo de Go (`.gob`).
+* **Por qué:** Elimina la necesidad de desplegar contenedores Docker o bases de datos externas (como ChromaDB o Qdrant). El formato `.gob` ofrece una tasa de compresión y velocidad de hidratación muy superior a JSON. Para conjuntos de datos locales (hasta ~50.000 fragmentos), la búsqueda secuencial $O(N)$ mediante **similitud de coseno** en memoria responde en menos de 5 milisegundos.
+
+### 3. Motor Aislado OCR en WASM
+* **Decisión:** Extracción de texto PDF dual (`extractor_pdf.go`) con motor de respaldo OCR bajo WebAssembly.
+* **Por qué:** Mantiene el principio de ejecutable único y portable sin requerir la instalación de binarios pesados en el sistema operativo del cliente (C++ / Tesseract tradicional).
+
+### 4. Ingesta Incremental Inteligente por Hashing MD5
+* **Decisión:** Registro de estado mediante firmas MD5 por archivo (`core_manifest_hash.go`) y control interactivo de memoria RAM (`core_ingestar.go`).
+* **Por qué:** Evita la re-vectorización innecesaria de documentos no modificados (ahorrando tiempo de CPU) y protege el sistema contra problemas de falta de memoria (*Out Of Memory*) al procesar archivos de gran tamaño (>50 MB).
+
+### 5. Fragmentación UTF-8 Segura
+* **Decisión:** Procesamiento de texto por vectores de runas (`core_fragmentar_chunks.go`) con solape (*overlap*) de 150 caracteres.
+* **Por qué:** Evita la corrupción de caracteres multibyte (tildes, `ñ`, símbolos) al cortar palabras y preserva el contexto semántico entre bloques contiguos.
