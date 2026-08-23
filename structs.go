@@ -112,3 +112,18 @@ type Document struct {
 	XMLName xml.Name     `xml:"document"`
 	Body    DocumentBody `xml:"body"`
 }
+
+// GestorMemoria administra el historial conversacional con ventana deslizante thread-safe.
+type GestorMemoria struct {
+	mu       sync.RWMutex
+	mensajes []Mensaje
+	limite   int
+}
+
+// ResultadoHerramienta representa la respuesta de la ejecución de una herramienta nativa.
+type ResultadoHerramienta struct {
+	Nombre    string `json:"nombre"`
+	Exito     bool   `json:"exito"`
+	Contenido string `json:"contenido"`
+	Error     string `json:"error,omitempty"`
+}
