@@ -96,3 +96,11 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 6. Fragmentación UTF-8 Segura
 * **Decisión:** Procesamiento de texto por vectores de runas (`core_fragmentar_chunks.go`) con solape (*overlap*) de 150 caracteres.
 * **Por qué:** Evita la corrupción de caracteres multibyte (tildes, `ñ`, símbolos) al cortar palabras y preserva el contexto semántico entre bloques contiguos.
+
+### 7. Cliente HTTP Nativo con Resiliencia y Fallback de Modelos
+* **Decisión:** Implementación de un cliente HTTP sin SDKs de terceros (config_conector_groq.go) con rotación dinámica y automática entre ModelosValidos (GestorModelos).
+* **Por qué:** Elimina dependencias pesadas de SDKs externos y evita interrupciones en el servicio si un modelo específico de Groq alcanza límites de frecuencia (rate limits) o sufre una caída temporal.
+
+### 8. Pipeline Polimórfico de Extracción Multiformato
+* **Decisión:** Despachador modular por extensiones (extractor_orquestador.go) con extractores nativos dedicados para .docx, .xlsx/.xlsm, .pdf y código/texto plano.
+* **Por qué:** Preserva la estructura original de tablas y documentos jerárquicos sin depender de scripts externos de Python o microservicios de parseo.
