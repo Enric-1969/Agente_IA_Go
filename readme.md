@@ -11,6 +11,8 @@ Agente_IA_Go/
 ├── config_validador.go         # Verificación de compatibilidad con Tool Calling
 ├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
 ├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
+├── core_memoria.go             # Gestor de memoria conversacional multi-turno (sliding window)
+├── core_herramientas.go        # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
 ├── core_manifest_hash.go       # Gestión de manifest.json, firmas MD5 y validación de cambios
 ├── core_fragmentar_chunks.go   # Fragmentación UTF-8 segura (runas) y solape de texto
 ├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
@@ -104,3 +106,11 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 8. Pipeline Polimórfico de Extracción Multiformato
 * **Decisión:** Despachador modular por extensiones (extractor_orquestador.go) con extractores nativos dedicados para .docx, .xlsx/.xlsm, .pdf y código/texto plano.
 * **Por qué:** Preserva la estructura original de tablas y documentos jerárquicos sin depender de scripts externos de Python o microservicios de parseo.
+
+### 9. Memoria Conversacional Multi-turno con Ventana Deslizante
+* **Decisión:** Gestor de historial en memoria (`core_memoria.go`) basado en ventana deslizante (*sliding window*) thread-safe mediante `sync.RWMutex`.
+* **Por qué:** Mantiene la coherencia contextual en conversaciones extensas sin saturar la ventana de tokens del modelo ni incrementar la latencia por procesamiento de historial acumulado.
+
+### 10. Despacho Nativo de Herramientas (Tool Calling)
+* **Decisión:** Módulo de herramientas Go nativas (`core_herramientas.go`) activado dinámicamente tras la clasificación por `RutaHerramienta`.
+* **Por qué:** Permite ejecutar operaciones del sistema, inspección de archivos y cálculos a velocidad nativa en local, reduciendo el consumo de tokens y evitando la necesidad de entornos de ejecución secundarios.
