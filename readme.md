@@ -6,7 +6,7 @@
 
 ```text
 Agente_IA_Go/
-├── structs.go                 # Definición centralizada de las estructuras de datos
+├── structs.go                  # Definición centralizada de tipos y estructuras de datos
 ├── config_rutas_locales.go     # Escaneo dinámico de carpetas de entrada y almacenamiento
 ├── config_validador.go         # Verificación de compatibilidad con Tool Calling
 ├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
@@ -16,15 +16,16 @@ Agente_IA_Go/
 ├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
 ├── core_vectorstore.go        # VectorStore nativo en memoria, persistencia .gob y similitud coseno
 ├── core_ingestar.go            # Coordinador principal de ingesta con control de memoria (>50MB)
-├── core_router.go              # Clasificación de preguntas por dominio técnico
-├── core_prompts.go             # Plantillas de sistema y prompts para el agente
+├── core_router.go              # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
+├── core_prompts.go             # Plantillas de sistema anti-alucinaciones y formateadores RAG
 ├── extractor_orquestador.go    # Despachador principal de ingesta según extensión
 ├── extractor_texto.go          # Extracción para archivos .txt, .md y código fuente
 ├── extractor_excel.go          # Extracción estructurada multipestaña para .xlsx y .xlsm
 ├── extractor_word.go           # Extracción de contenido estructurado para .docx
 ├── extractor_pdf.go            # Extracción nativa de PDF con fallback OCR WASM concurrente
-├── main.go                     # CLI interactiva y bucle de orquestación RAG
-├── storage/                    # Archivos de persistencia (.gob y manifest.json)
+├── main.go                     # CLI interactiva y orquestador del ciclo de vida RAG
+├── documentos_entrada/         # Carpeta de entrada para documentos a procesar
+├── mis_vectorstores/           # Almacenamiento persistente (.gob y manifest.json)
 ├── .env
 ├── .env.example
 ├── .gitignore
@@ -79,14 +80,19 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización en formato binario nativo de Go (`.gob`).
 * **Por qué:** Elimina la necesidad de desplegar contenedores Docker o bases de datos externas (como ChromaDB o Qdrant). El formato `.gob` ofrece una tasa de compresión y velocidad de hidratación muy superior a JSON. Para conjuntos de datos locales (hasta ~50.000 fragmentos), la búsqueda secuencial $O(N)$ mediante **similitud de coseno** en memoria responde en menos de 5 milisegundos.
 
-### 3. Motor Aislado OCR en WASM
+### 3. Enrutamiento Híbrido de Cero-Coste
+* **Decisión:** Clasificación en dos fases (core_router.go): reglas heurísticas en local primero, evaluación por LLM en caso de ambigüedad.
+
+* **Por qué:** Resuelve consultas directas en microsegundos sin consumir tokens de API ni incurrir en latencia de red.
+
+### 4. Motor Aislado OCR en WASM
 * **Decisión:** Extracción de texto PDF dual (`extractor_pdf.go`) con motor de respaldo OCR bajo WebAssembly.
 * **Por qué:** Mantiene el principio de ejecutable único y portable sin requerir la instalación de binarios pesados en el sistema operativo del cliente (C++ / Tesseract tradicional).
 
-### 4. Ingesta Incremental Inteligente por Hashing MD5
+### 5. Ingesta Incremental Inteligente por Hashing MD5
 * **Decisión:** Registro de estado mediante firmas MD5 por archivo (`core_manifest_hash.go`) y control interactivo de memoria RAM (`core_ingestar.go`).
 * **Por qué:** Evita la re-vectorización innecesaria de documentos no modificados (ahorrando tiempo de CPU) y protege el sistema contra problemas de falta de memoria (*Out Of Memory*) al procesar archivos de gran tamaño (>50 MB).
 
-### 5. Fragmentación UTF-8 Segura
+### 6. Fragmentación UTF-8 Segura
 * **Decisión:** Procesamiento de texto por vectores de runas (`core_fragmentar_chunks.go`) con solape (*overlap*) de 150 caracteres.
 * **Por qué:** Evita la corrupción de caracteres multibyte (tildes, `ñ`, símbolos) al cortar palabras y preserva el contexto semántico entre bloques contiguos.
