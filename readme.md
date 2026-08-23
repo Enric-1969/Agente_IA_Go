@@ -5,12 +5,23 @@
 ## Estructura del Proyecto
 
 ```text
+Aquí tienes el README.md actualizado incorporando core_agente.go en la estructura del proyecto y refinando la responsabilidad de main.go:
+
+Markdown
+# 🌱 Agente_IA_Go
+
+**Agente_IA_Go** es un sistema RAG (*Retrieval-Augmented Generation*) ultraligero, modular y concurrente escrito en Go, diseñado para procesar documentación técnica local e interactuar con modelos de lenguaje a través de la API de Groq.
+
+## Estructura del Proyecto
+
+```text
 Agente_IA_Go/
 ├── structs.go                  # Definición centralizada de tipos y estructuras de datos
 ├── config_rutas_locales.go     # Escaneo dinámico de carpetas de entrada y almacenamiento
 ├── config_validador.go         # Verificación de compatibilidad con Tool Calling
 ├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
 ├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
+├── core_agente.go              # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
 ├── core_memoria.go             # Gestor de memoria conversacional multi-turno (sliding window)
 ├── core_herramientas.go        # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
 ├── core_manifest_hash.go       # Gestión de manifest.json, firmas MD5 y validación de cambios
@@ -25,7 +36,7 @@ Agente_IA_Go/
 ├── extractor_excel.go          # Extracción estructurada multipestaña para .xlsx y .xlsm
 ├── extractor_word.go           # Extracción de contenido estructurado para .docx
 ├── extractor_pdf.go            # Extracción nativa de PDF con fallback OCR WASM concurrente
-├── main.go                     # CLI interactiva y orquestador del ciclo de vida RAG
+├── main.go                     # Punto de entrada CLI/REPL e inicialización del entorno
 ├── documentos_entrada/         # Carpeta de entrada para documentos a procesar
 ├── mis_vectorstores/           # Almacenamiento persistente (.gob y manifest.json)
 ├── .env
