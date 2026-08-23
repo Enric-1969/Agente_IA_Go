@@ -2,81 +2,11 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-func formatoDocumentos(resultados []ResultadoBusqueda) string {
-	var sb strings.Builder
-	for i, res := range resultados {
-		sb.WriteString(fmt.Sprintf("--- Fragmento %d (Origen: %s | Similitud: %.4f) ---\n", i+1, res.Documento.Chunk.Origen, res.Similitud))
-		sb.WriteString(res.Documento.Chunk.Contenido)
-		sb.WriteString("\n\n")
-	}
-	return sb.String()
-}
-
-func consultarAgente(pregunta string, gestor *GestorModelos, vs *VectorStore, modeloEmbedding string) {
-	ctx := context.Background()
-
-	// 1. Clasificación de intención mediante core_router.go (usa FormatearPromptRouter internamente)
-	fmt.Println("🧠 Analizando intención de la consulta...")
-	tipoRuta, err := ClasificarConsultaClave(ctx, gestor, pregunta)
-	if err != nil {
-		fmt.Printf("⚠️ Error al clasificar consulta, asignando RutaGeneral: %v\n", err)
-		tipoRuta = RutaGeneral
-	}
-
-	fmt.Printf("🎯 Ruta asignada por el router: [%v]\n", tipoRuta)
-
-	// 2. Búsqueda y recuperación vectorial
-	var contexto string
-	if tipoRuta == RutaRAG || tipoRuta == RutaGeneral {
-		fmt.Println("📂 Generando embedding y recuperando contexto relevante...")
-		vecConsulta, err := GenerarEmbedding(pregunta, modeloEmbedding)
-		if err == nil {
-			resultados := vs.BuscarSimilares(vecConsulta, 3)
-			if len(resultados) > 0 {
-				contexto = formatoDocumentos(resultados)
-				fmt.Printf("✅ Se recuperaron %d fragmentos relevantes.\n", len(resultados))
-			} else {
-				fmt.Println("ℹ️ No se encontraron coincidencias vectoriales suficientes.")
-			}
-		} else {
-			fmt.Printf("⚠️ No se pudo generar embedding de la consulta: %v\n", err)
-		}
-	}
-
-	// 3. Formateo exacto usando constantes y funciones de core_prompts.go
-	var contenidoUsuario string
-	if contexto != "" {
-		contenidoUsuario = FormatearPromptRAG(contexto, pregunta)
-	} else {
-		contenidoUsuario = pregunta
-	}
-
-	mensajes := []Mensaje{
-		{Role: "system", Content: PromptSistemaBase},
-		{Role: "user", Content: contenidoUsuario},
-	}
-
-	modeloActual := gestor.ModeloActivo
-	fmt.Printf("\n🚀 Consultando a Groq [%s]: '%s'\n%s\n", modeloActual, pregunta, strings.Repeat("-", 60))
-
-	// 4. Invocación al conector de Groq
-	respuesta, err := EnviarConsultaGroq(gestor, mensajes)
-	if err != nil {
-		fmt.Printf("❌ Error al comunicarse con Groq: %v\n", err)
-		return
-	}
-
-	fmt.Println("\n🤖 Respuesta del Agente:")
-	fmt.Println(respuesta)
-	fmt.Println("\n" + strings.Repeat("=", 60))
-}
 
 func main() {
 	fmt.Println("===========================================")
@@ -103,7 +33,6 @@ func main() {
 		}
 	}
 
-	// Inicialización con los nombres de campos de structs.go
 	gestor := &GestorModelos{
 		APIKey:         apiKey,
 		ModelosValidos: modelos,
@@ -125,6 +54,7 @@ func main() {
 		fmt.Printf("📚 Base vectorial cargada desde %s (%d vectores activos en RAM)\n", archivoGOB, len(vs.Documentos))
 	}
 
+	memoria := NuevoGestorMemoria(6)
 	_ = ProcesarDominioIngesta(dirOrigen, dirVectorStore, modeloEmbedding, vs)
 
 	reader := bufio.NewReader(os.Stdin)
@@ -143,7 +73,7 @@ func main() {
 		}
 
 		if preguntaUsuario != "" {
-			consultarAgente(preguntaUsuario, gestor, vs, modeloEmbedding)
+			ProcesarConsulta(preguntaUsuario, gestor, vs, modeloEmbedding, memoria, dirOrigen)
 		}
 	}
 }
