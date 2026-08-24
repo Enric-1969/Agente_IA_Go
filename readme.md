@@ -6,34 +6,36 @@
 
 ```text
 Agente_IA_Go/
-├── structs.go                  # Definición centralizada de tipos y estructuras de datos
-├── config_rutas_locales.go     # Escaneo dinámico de carpetas de entrada y almacenamiento
-├── config_validador.go         # Verificación de compatibilidad con Tool Calling
-├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
-├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
-├── core_agente.go              # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
-├── core_agente_helpers.go      # Formateo y serialización de contexto RAG para el orquestador
-├── core_bm25.go                # Indización y puntuación léxica exactas por palabras clave (BM25)
-├── core_rrf.go                 # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
-├── core_memoria.go             # Gestor de memoria conversacional multi-turno (sliding window)
-├── core_herramientas.go        # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
-├── core_manifest_hash.go       # Gestión de manifest.json, firmas MD5 y validación de cambios
-├── core_fragmentar_chunks.go   # Fragmentación UTF-8 segura (runas) y solape de texto
-├── core_embeddings.go          # Cliente HTTP nativo para generación de vectores con Ollama
-├── core_vectorstore.go         # VectorStore nativo en memoria, persistencia .gob y similitud coseno
-├── core_ingestar.go            # Coordinador principal de ingesta con control de memoria (>50MB)
-├── core_router.go              # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
-├── core_router_helpers.go      # Reglas heurísticas y filtrado léxico local del enrutador
-├── core_prompts.go             # Plantillas de sistema, roles y constantes del agente
-├── core_prompts_helpers.go     # Formateadores y constructores de cadenas de prompts
-├── extractor_orquestador.go    # Despachador principal de ingesta según extensión
-├── extractor_texto.go          # Extracción para archivos .txt, .md y código fuente
-├── extractor_excel.go          # Extracción estructurada multipestaña para .xlsx y .xlsm
-├── extractor_word.go           # Extracción de contenido estructurado para .docx
-├── extractor_pdf.go            # Extracción nativa de PDF con fallback OCR WASM concurrente
-├── main.go                     # Punto de entrada CLI/REPL e inicialización del entorno
-├── documentos_entrada/         # Carpeta de entrada para documentos a procesar
-├── mis_vectorstores/           # Almacenamiento persistente (.gob y manifest.json)
+├── structs.go                 # Definición centralizada de tipos y estructuras de datos
+├── config_rutas_locales.go    # Escaneo dinámico de carpetas de entrada y almacenamiento
+├── config_validador.go        # Verificación de compatibilidad con Tool Calling
+├── config_crea_lista_models.go# Escaneo concurrente y rotación del catálogo activo de Groq
+├── config_conector_groq.go    # Cliente HTTP nativo, reconexión y fallback de modelos
+├── core_agente.go             # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
+├── core_agente_helpers.go     # Formateo y serialización de contexto RAG para el orquestador
+├── core_bm25.go               # Indización y puntuación léxica exactas por palabras clave (BM25)
+├── core_bm25_helpers.go       # Tokenización, limpieza y normalización de texto aislada para BM25
+├── core_rrf.go                # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
+├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
+├── core_herramientas.go       # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
+├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
+├── core_fragmentar_chunks.go  # Fragmentación UTF-8 segura (runas) y solape de texto
+├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
+├── core_vectorstore.go        # VectorStore en memoria, persistencia .gob y orquestación de búsqueda híbrida
+├── core_vectorstore_helpers.go# Funciones auxiliares matemáticas aisladas (Similitud Coseno)
+├── core_ingestar.go           # Coordinador principal de ingesta con control de memoria (>50MB)
+├── core_router.go             # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
+├── core_router_helpers.go     # Reglas heurísticas y filtrado léxico local del enrutador
+├── core_prompts.go            # Plantillas de sistema, roles y constantes del agente
+├── core_prompts_helpers.go    # Formateadores y constructores de cadenas de prompts
+├── extractor_orquestador.go   # Despachador principal de ingesta según extensión
+├── extractor_texto.go         # Extracción para archivos .txt, .md y código fuente
+├── extractor_excel.go         # Extracción estructurada multipestaña para .xlsx y .xlsm
+├── extractor_word.go          # Extracción de contenido estructurado para .docx
+├── extractor_pdf.go           # Extracción nativa de PDF con fallback OCR WASM concurrente
+├── main.go                    # Punto de entrada CLI/REPL e inicialización del entorno
+├── documentos_entrada/        # Carpeta de entrada para documentos a procesar
+├── mis_vectorstores/          # Almacenamiento persistente (.gob y manifest.json)
 ├── .env
 ├── .env.example
 ├── .gitignore
@@ -122,7 +124,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Por qué:** Permite ejecutar operaciones del sistema, inspección de archivos y cálculos a velocidad nativa en local, reduciendo el consumo de tokens y evitando la necesidad de entornos de ejecución secundarios.
 
 ### 11. Búsqueda Híbrida (BM25 + Similitud Coseno) mediante Reciprocal Rank Fusion (RRF)
-* **Decisión:** Combinación de búsqueda vectorial semántica con el algoritmo de frecuencia de términos BM25 (`core_bm25.go`), fusionados dinámicamente mediante RRF (`core_rrf.go`).
+* **Decisión:** Combinación de búsqueda vectorial semántica con el algoritmo de frecuencia de términos BM25 (`core_bm25.go` y `core_bm25_helpers.go`), fusionados dinámicamente mediante RRF (`core_rrf.go`).
 * **Por qué:** Resuelve las limitaciones del RAG puramente vectorial en consultas que contienen nombres de funciones, códigos de error o identificadores exactos, ofreciendo máxima precisión contextual antes de invocar al modelo.
 
 ### 12. Selección Dinámica de Prompts de Sistema por Intención
