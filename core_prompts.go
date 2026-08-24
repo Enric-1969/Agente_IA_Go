@@ -33,6 +33,7 @@ const PromptClasificador = `Analiza la consulta e identifica la intención del u
 Responde ÚNICAMENTE con una de estas opciones en minúsculas:
 - rag (para consultas sobre documentación de Z:/Files_IA)
 - herramienta (para cálculos, búsquedas directas o tareas que requieran herramientas)
+- desarrollo (para refactorización, creación de código Go o reglas de arquitectura)
 - general (para interacciones directas sin necesidad de documentos)
 
 Consulta: %s`

@@ -13,6 +13,7 @@ const (
 	RutaRAG         TipoRuta = "rag"
 	RutaHerramienta TipoRuta = "herramienta"
 	RutaGeneral     TipoRuta = "general"
+	RutaDesarrollo  TipoRuta = "desarrollo" // Nueva constante
 )
 
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
