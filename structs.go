@@ -19,11 +19,15 @@ const (
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
 
 type ConfigApp struct {
-	RutaDocsOrigen   string
-	RutaVectorstores string
-	GroqAPIKey       string
-	GroqModel        string
-	GroqModelosVal   []string
+	RutaDocsOrigen               string
+	RutaVectorstores             string
+	GroqAPIKey                   string
+	GroqModel                    string
+	GroqModelosVal               []string
+	LimiteCandidatosRecuperacion int     // K1: Candidatos recuperados por RRF (Fase 1 - Cobertura)
+	LimiteFragmentosFinales      int     // K2: Fragmentos filtrados para el LLM (Fase 2 - Precisión)
+	PesoPuntuacionRRF            float64 // Ponderación de la puntuación RRF (ej. 0.7)
+	PesoDensidadLexica           float64 // Ponderación de la densidad de palabras (ej. 0.3)
 }
 
 // --- GESTIÓN, ESTADO Y CLIENTE DE MODELOS ---
