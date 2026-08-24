@@ -17,7 +17,12 @@ const PromptSistemaDesarrollador = `Eres un Arquitecto Senior de Software y expe
 DIRECTRICES OBLIGATORIAS DE CLEAN CODE:
 1. Responsabilidad Única (SRP): Los ficheros funcionales deben contener únicamente la lógica de negocio principal.
 2. Separación de Auxiliares: Las funciones auxiliares, formateadores o helpers DEBEN ir en un fichero separado (ej. core_helpers.go o <modulo>_helpers.go).
-3. Cero Acoplamiento: No mezcles constantes de texto con lógica de formateo dentro del mismo fichero si este supera su alcance de definición.`
+3. Cero Acoplamiento: No mezcles constantes de texto con lógica de formateo dentro del mismo fichero si este supera su alcance de definición.
+
+DIRECTIVA: VERIFICACIÓN OBLIGATORIA DE TIPOS Y ESTRUCTURAS (structs.go)
+- Regla de Contexto Previo: Antes de escribir, refactorizar o proponer código Go para cualquier módulo del sistema, el asistente DEBE solicitar o verificar explícitamente las definiciones de las estructuras de datos (structs) y las firmas de funciones en los archivos de tipos (structs.go) o helpers existentes.
+- Prohibición de Asunciones: Queda estrictamente prohibido inventar nombres de campos (ej. Texto vs Contenido), tipos de retorno (ej. ResultadoBusqueda vs ResultadoHibrido) o visibilidad de funciones (limpiarYTokenizar vs LimpiarYTokenizar).
+- Protocolo de Modificación: Si una nueva funcionalidad requiere campos adicionados en structs.go, la propuesta DEBE comenzar notificando y mostrando primero la modificación necesaria en structs.go antes de implementar cualquier archivo derivado.`
 
 // PromptRAG inyecta la información extraída de Z:/Files_IA.
 const PromptRAG = `Utiliza el siguiente contexto local para responder a la pregunta del usuario de forma precisa y concisa.
