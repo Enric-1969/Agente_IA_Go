@@ -5,16 +5,6 @@
 ## Estructura del Proyecto
 
 ```text
-Aquí tienes el README.md actualizado incorporando core_agente.go en la estructura del proyecto y refinando la responsabilidad de main.go:
-
-Markdown
-# 🌱 Agente_IA_Go
-
-**Agente_IA_Go** es un sistema RAG (*Retrieval-Augmented Generation*) ultraligero, modular y concurrente escrito en Go, diseñado para procesar documentación técnica local e interactuar con modelos de lenguaje a través de la API de Groq.
-
-## Estructura del Proyecto
-
-```text
 Agente_IA_Go/
 ├── structs.go                  # Definición centralizada de tipos y estructuras de datos
 ├── config_rutas_locales.go     # Escaneo dinámico de carpetas de entrada y almacenamiento
@@ -22,12 +12,14 @@ Agente_IA_Go/
 ├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
 ├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
 ├── core_agente.go              # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
+├── core_bm25.go                # Indización y puntuación léxica exactas por palabras clave (BM25)
+├── core_rrf.go                 # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
 ├── core_memoria.go             # Gestor de memoria conversacional multi-turno (sliding window)
 ├── core_herramientas.go        # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
 ├── core_manifest_hash.go       # Gestión de manifest.json, firmas MD5 y validación de cambios
 ├── core_fragmentar_chunks.go   # Fragmentación UTF-8 segura (runas) y solape de texto
-├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
-├── core_vectorstore.go        # VectorStore nativo en memoria, persistencia .gob y similitud coseno
+├── core_embeddings.go          # Cliente HTTP nativo para generación de vectores con Ollama
+├── core_vectorstore.go         # VectorStore nativo en memoria, persistencia .gob y similitud coseno
 ├── core_ingestar.go            # Coordinador principal de ingesta con control de memoria (>50MB)
 ├── core_router.go              # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
 ├── core_prompts.go             # Plantillas de sistema anti-alucinaciones y formateadores RAG
@@ -91,10 +83,10 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 
 ### 2. VectorStore Nativo en Go Pure + Persistencia Binaria `.gob`
 * **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización en formato binario nativo de Go (`.gob`).
-* **Por qué:** Elimina la necesidad de desplegar contenedores Docker o bases de datos externas (como ChromaDB o Qdrant). El formato `.gob` ofrece una tasa de compresión y velocidad de hidratación muy superior a JSON. Para conjuntos de datos locales (hasta ~50.000 fragmentos), la búsqueda secuencial $O(N)$ mediante **similitud de coseno** en memoria responde en menos de 5 milisegundos.
+* **Por qué:** Elimina la necesidad de desplegar contenedores Docker o bases de datos externas. El formato `.gob` ofrece una tasa de compresión y velocidad de hidratación superior a JSON. La búsqueda por similitud de coseno en RAM responde en menos de 5 ms sin consumo de tokens de la API.
 
 ### 3. Enrutamiento Híbrido de Cero-Coste
-* **Decisión:** Clasificación en dos fases (core_router.go): reglas heurísticas en local primero, evaluación por LLM en caso de ambigüedad.
+* **Decisión:** Clasificación en dos fases (`core_router.go`): reglas heurísticas en local primero, evaluación por LLM en caso de ambigüedad.
 
 * **Por qué:** Resuelve consultas directas en microsegundos sin consumir tokens de API ni incurrir en latencia de red.
 
@@ -111,11 +103,11 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Por qué:** Evita la corrupción de caracteres multibyte (tildes, `ñ`, símbolos) al cortar palabras y preserva el contexto semántico entre bloques contiguos.
 
 ### 7. Cliente HTTP Nativo con Resiliencia y Fallback de Modelos
-* **Decisión:** Implementación de un cliente HTTP sin SDKs de terceros (config_conector_groq.go) con rotación dinámica y automática entre ModelosValidos (GestorModelos).
+* **Decisión:** Implementación de un cliente HTTP sin SDKs de terceros (`config_conector_groq.go`) con rotación dinámica y automática entre ModelosValidos (`GestorModelos`).
 * **Por qué:** Elimina dependencias pesadas de SDKs externos y evita interrupciones en el servicio si un modelo específico de Groq alcanza límites de frecuencia (rate limits) o sufre una caída temporal.
 
 ### 8. Pipeline Polimórfico de Extracción Multiformato
-* **Decisión:** Despachador modular por extensiones (extractor_orquestador.go) con extractores nativos dedicados para .docx, .xlsx/.xlsm, .pdf y código/texto plano.
+* **Decisión:** Despachador modular por extensiones (`extractor_orquestador.go`) con extractores nativos dedicados para .docx, .xlsx/.xlsm, .pdf y código/texto plano.
 * **Por qué:** Preserva la estructura original de tablas y documentos jerárquicos sin depender de scripts externos de Python o microservicios de parseo.
 
 ### 9. Memoria Conversacional Multi-turno con Ventana Deslizante
@@ -125,3 +117,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 10. Despacho Nativo de Herramientas (Tool Calling)
 * **Decisión:** Módulo de herramientas Go nativas (`core_herramientas.go`) activado dinámicamente tras la clasificación por `RutaHerramienta`.
 * **Por qué:** Permite ejecutar operaciones del sistema, inspección de archivos y cálculos a velocidad nativa en local, reduciendo el consumo de tokens y evitando la necesidad de entornos de ejecución secundarios.
+
+### 11. Búsqueda Híbrida (BM25 + Similitud Coseno) mediante Reciprocal Rank Fusion (RRF)
+* **Decisión:** Combinación de búsqueda vectorial semántica con el algoritmo de frecuencia de términos BM25 (`core_bm25.go`), fusionados dinámicamente mediante RRF (`core_rrf.go`).
+* **Por qué:** Resuelve las limitaciones del RAG puramente vectorial en consultas que contienen nombres de funciones, códigos de error o identificadores exactos, ofreciendo máxima precisión contextual antes de invocar al modelo.
