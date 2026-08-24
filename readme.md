@@ -12,6 +12,7 @@ Agente_IA_Go/
 ├── config_crea_lista_models.go # Escaneo concurrente y rotación del catálogo activo de Groq
 ├── config_conector_groq.go     # Cliente HTTP nativo, reconexión y fallback de modelos
 ├── core_agente.go              # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
+├── core_agente_helpers.go      # Formateo y serialización de contexto RAG para el orquestador
 ├── core_bm25.go                # Indización y puntuación léxica exactas por palabras clave (BM25)
 ├── core_rrf.go                 # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
 ├── core_memoria.go             # Gestor de memoria conversacional multi-turno (sliding window)
@@ -22,7 +23,9 @@ Agente_IA_Go/
 ├── core_vectorstore.go         # VectorStore nativo en memoria, persistencia .gob y similitud coseno
 ├── core_ingestar.go            # Coordinador principal de ingesta con control de memoria (>50MB)
 ├── core_router.go              # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
-├── core_prompts.go             # Plantillas de sistema anti-alucinaciones y formateadores RAG
+├── core_router_helpers.go      # Reglas heurísticas y filtrado léxico local del enrutador
+├── core_prompts.go             # Plantillas de sistema, roles y constantes del agente
+├── core_prompts_helpers.go     # Formateadores y constructores de cadenas de prompts
 ├── extractor_orquestador.go    # Despachador principal de ingesta según extensión
 ├── extractor_texto.go          # Extracción para archivos .txt, .md y código fuente
 ├── extractor_excel.go          # Extracción estructurada multipestaña para .xlsx y .xlsm
