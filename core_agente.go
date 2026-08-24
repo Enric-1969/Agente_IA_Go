@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func formatoDocumentos(resultados []ResultadoBusqueda) string {
+func formatoDocumentos(resultados []ResultadoHibrido) string {
 	var sb strings.Builder
 	for i, res := range resultados {
-		sb.WriteString(fmt.Sprintf("--- Fragmento %d (Origen: %s | Similitud: %.4f) ---\n", i+1, res.Documento.Chunk.Origen, res.Similitud))
+		sb.WriteString(fmt.Sprintf("--- Fragmento %d (Origen: %s | Similitud: %.4f) ---\n", i+1, res.Documento.Chunk.Origen, res.ScoreRRF))
 		sb.WriteString(res.Documento.Chunk.Contenido)
 		sb.WriteString("\n\n")
 	}
@@ -65,7 +65,7 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 		fmt.Println("📂 Generando embedding y recuperando contexto relevante...")
 		vecConsulta, err := GenerarEmbedding(pregunta, modeloEmbedding)
 		if err == nil {
-			resultados := vs.BuscarSimilares(vecConsulta, 3)
+			resultados := vs.BuscarHibrido(pregunta, vecConsulta, 3)
 			if len(resultados) > 0 {
 				contexto = formatoDocumentos(resultados)
 				fmt.Printf("✅ Se recuperaron %d fragmentos relevantes.\n", len(resultados))
