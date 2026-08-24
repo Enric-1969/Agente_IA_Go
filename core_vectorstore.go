@@ -96,3 +96,23 @@ func (vs *VectorStore) BuscarSimilares(queryVector []float32, topK int) []Result
 
 	return resultados
 }
+
+// BuscarHibrido ejecuta la búsqueda por Similitud Coseno y BM25, fusionando sus rankings mediante RRF.
+func (vs *VectorStore) BuscarHibrido(pregunta string, queryVector []float32, topK int) []ResultadoHibrido {
+	vs.mu.RLock()
+	defer vs.mu.RUnlock()
+
+	if len(vs.Documentos) == 0 {
+		return nil
+	}
+
+	// 1. Recuperación vectorial amplia
+	resVector := vs.BuscarSimilares(queryVector, topK*2)
+
+	// 2. Recuperación léxica por palabras clave (BM25)
+	indiceBM25 := NuevoIndiceBM25(vs.Documentos)
+	resBM25 := indiceBM25.BuscarBM25(pregunta, vs.Documentos, topK*2)
+
+	// 3. Fusión matemática de rankings (RRF)
+	return FusionarResultadosRRF(resVector, resBM25, topK)
+}
