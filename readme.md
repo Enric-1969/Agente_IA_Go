@@ -67,6 +67,12 @@ OLLAMA_HOST="http://localhost:11434"
 # Linux/macOS: "/var/data/files_ia"
 RUTA_DOCS_ORIGEN="./documentos_entrada"
 RUTA_VECTORSTORES="./mis_vectorstores"
+
+# Parámetros de Recuperación y Re-Ranking (Two-Stage Retrieval)
+LIMITE_CANDIDATOS_RECUPERACION=10
+LIMITE_FRAGMENTOS_FINALES=3
+PESO_PUNTUACION_RRF=0.7
+PESO_DENSIDAD_LEXICA=0.3
 ```
 
 ## Requisitos y Dependencias
