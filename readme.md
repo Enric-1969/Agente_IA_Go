@@ -15,19 +15,22 @@ Agente_IA_Go/
 ├── core_agente_helpers.go     # Formateo y serialización de contexto RAG para el orquestador
 ├── core_bm25.go               # Indización y puntuación léxica exactas por palabras clave (BM25)
 ├── core_bm25_helpers.go       # Tokenización, limpieza y normalización de texto aislada para BM25
-├── core_rrf.go                # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
-├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
-├── core_herramientas.go       # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
-├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
-├── core_fragmentar_chunks.go  # Fragmentación UTF-8 segura (runas) y solape de texto
+├── core_calcular_relevancia.go   # Cálculo de densidad y re-puntuación
 ├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
-├── core_vectorstore.go        # VectorStore en memoria, persistencia .gob y orquestación de búsqueda híbrida
-├── core_vectorstore_helpers.go# Funciones auxiliares matemáticas aisladas (Similitud Coseno)
+├── core_fragmentar_chunks.go  # Fragmentación UTF-8 segura (runas) y solape de texto
+
+├── core_herramientas.go       # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
 ├── core_ingestar.go           # Coordinador principal de ingesta con control de memoria (>50MB)
-├── core_router.go             # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
-├── core_router_helpers.go     # Reglas heurísticas y filtrado léxico local del enrutador
+├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
+├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
+├── core_orquestador_ranking.go  # Pipeline de filtrado Top-N
 ├── core_prompts.go            # Plantillas de sistema, roles y constantes del agente
 ├── core_prompts_helpers.go    # Formateadores y constructores de cadenas de prompts
+├── core_router.go             # Enrutador híbrido (heurístico + LLM) de intenciones (RAG/Herramienta/General)
+├── core_router_helpers.go     # Reglas heurísticas y filtrado léxico local del enrutador
+├── core_rrf.go                # Algoritmo de fusión matemática de rankings (Reciprocal Rank Fusion)
+├── core_vectorstore.go        # VectorStore en memoria, persistencia .gob y orquestación de búsqueda híbrida
+├── core_vectorstore_helpers.go# Funciones auxiliares matemáticas aisladas (Similitud Coseno)
 ├── extractor_orquestador.go   # Despachador principal de ingesta según extensión
 ├── extractor_texto.go         # Extracción para archivos .txt, .md y código fuente
 ├── extractor_excel.go         # Extracción estructurada multipestaña para .xlsx y .xlsm
@@ -130,3 +133,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 12. Selección Dinámica de Prompts de Sistema por Intención
 * **Decisión:** Inyección condicional del prompt de sistema (`PromptSistemaBase` vs `PromptSistemaDesarrollador`) mediante `SeleccionarPromptSistema` en `core_prompts_helpers.go`, activada tras la clasificación de `RutaDesarrollo`.
 * **Por qué:** Aplica las directrices estrictas de *Clean Code*, modularidad y separación de funciones auxiliares (*SRP*) únicamente en consultas de desarrollo o refactorización, evitando sobrecargar el contexto de las consultas RAG convencionales.
+
+### 13. Re-Ranking Híbrido y Ponderación por Densidad Léxica (Top-N)
+* **Decisión:** Pipeline dedicado de re-evaluación (`core_orquestador_ranking.go`) y cálculo de densidad léxica (`core_calcular_relevancia.go`) sobre los candidatos devueltos por RRF.
+* **Por qué:** Filtra candidatos ruidosos recalculando la relevancia real de cada fragmento antes de inyectar el contexto al prompt del modelo, optimizando el uso de la ventana de contexto.
