@@ -127,3 +127,22 @@ type ResultadoHerramienta struct {
 	Contenido string `json:"contenido"`
 	Error     string `json:"error,omitempty"`
 }
+
+// ResultadoHibrido combina métricas de similitud vectorial, léxica (BM25) y puntuación RRF.
+type ResultadoHibrido struct {
+	Documento   DocumentoVectorial
+	ScoreVector float64
+	ScoreBM25   float64
+	ScoreRRF    float64
+}
+
+// IndiceBM25 gestiona la recuperación léxica exacta por términos de frecuencia.
+type IndiceBM25 struct {
+	IDF       map[string]float64
+	DocLen    map[int]float64
+	AvgDocLen float64
+	TotalDocs int
+	TermFreqs []map[string]int
+	K1        float64
+	B         float64
+}
