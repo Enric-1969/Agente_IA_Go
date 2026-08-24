@@ -34,6 +34,8 @@ func ClasificarConsultaClave(ctx context.Context, gestor *GestorModelos, consult
 		return RutaRAG, nil
 	case strings.Contains(respuestaLimpia, "herramienta"):
 		return RutaHerramienta, nil
+	case strings.Contains(respuestaLimpia, "desarrollo") || strings.Contains(respuestaLimpia, "codigo"):
+		return RutaDesarrollo, nil
 	default:
 		return RutaGeneral, nil
 	}

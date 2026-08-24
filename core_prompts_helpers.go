@@ -13,3 +13,11 @@ func FormatearPromptRAG(contexto string, consulta string) string {
 func FormatearPromptRouter(consulta string) string {
 	return fmt.Sprintf(PromptClasificador, consulta)
 }
+
+// SeleccionarPromptSistema devuelve el prompt de sistema adecuado según la intención clasificada.
+func SeleccionarPromptSistema(ruta TipoRuta) string {
+	if ruta == RutaDesarrollo {
+		return PromptSistemaDesarrollador
+	}
+	return PromptSistemaBase
+}

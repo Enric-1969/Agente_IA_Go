@@ -8,6 +8,12 @@ import (
 func EvaluarIntencionHeuristica(consulta string) (TipoRuta, bool) {
 	q := strings.ToLower(strings.TrimSpace(consulta))
 
+	// Detección directa de tareas de desarrollo y Clean Code
+	if strings.Contains(q, "refactoriza") || strings.Contains(q, "clean code") ||
+		strings.Contains(q, "crea fichero") || strings.Contains(q, "codigo go") {
+		return RutaDesarrollo, true
+	}
+
 	if strings.HasPrefix(q, "que es") || strings.HasPrefix(q, "como") || strings.Contains(q, "documentacion") {
 		return RutaRAG, true
 	}
