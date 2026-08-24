@@ -59,16 +59,29 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 		return
 	}
 
-	// 4. Búsqueda y recuperación vectorial para RAG / General
+	// 4. Búsqueda y recuperación vectorial para RAG / General (Two-Stage Retrieval)
 	var contexto string
 	if tipoRuta == RutaRAG || tipoRuta == RutaGeneral {
-		fmt.Println("📂 Generando embedding y recuperando contexto relevante...")
+		fmt.Println("📂 Generando embedding y recuperando candidatos RRF (Fase 1)...")
 		vecConsulta, err := GenerarEmbedding(pregunta, modeloEmbedding)
 		if err == nil {
-			resultados := vs.BuscarHibrido(pregunta, vecConsulta, 3)
-			if len(resultados) > 0 {
-				contexto = formatoDocumentos(resultados)
-				fmt.Printf("✅ Se recuperaron %d fragmentos relevantes.\n", len(resultados))
+			// Valores por defecto o extraídos de la configuración
+			limiteK1 := 10
+			limiteK2 := 3
+			pesoRRF := 0.7
+			pesoDensidad := 0.3
+
+			// Fase 1: Cobertura amplia (K1 candidatos)
+			candidatos := vs.BuscarHibrido(pregunta, vecConsulta, limiteK1)
+
+			if len(candidatos) > 0 {
+				fmt.Printf("🔍 Fase 1: %d candidatos recuperados. Aplicando Re-Ranking Top-%d (Fase 2)...\n", len(candidatos), limiteK2)
+
+				// Fase 2: Re-Ranking por densidad léxica y recorte al Top-N (K2 final)
+				resultadosFinales := EjecutarReordenamiento(pregunta, candidatos, limiteK2, pesoRRF, pesoDensidad)
+
+				contexto = formatoDocumentos(resultadosFinales)
+				fmt.Printf("✅ Fase 2: %d fragmentos finales seleccionados para el prompt.\n", len(resultadosFinales))
 			} else {
 				fmt.Println("ℹ️ No se encontraron coincidencias vectoriales suficientes.")
 			}
