@@ -124,3 +124,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 11. Búsqueda Híbrida (BM25 + Similitud Coseno) mediante Reciprocal Rank Fusion (RRF)
 * **Decisión:** Combinación de búsqueda vectorial semántica con el algoritmo de frecuencia de términos BM25 (`core_bm25.go`), fusionados dinámicamente mediante RRF (`core_rrf.go`).
 * **Por qué:** Resuelve las limitaciones del RAG puramente vectorial en consultas que contienen nombres de funciones, códigos de error o identificadores exactos, ofreciendo máxima precisión contextual antes de invocar al modelo.
+
+### 12. Selección Dinámica de Prompts de Sistema por Intención
+* **Decisión:** Inyección condicional del prompt de sistema (`PromptSistemaBase` vs `PromptSistemaDesarrollador`) mediante `SeleccionarPromptSistema` en `core_prompts_helpers.go`, activada tras la clasificación de `RutaDesarrollo`.
+* **Por qué:** Aplica las directrices estrictas de *Clean Code*, modularidad y separación de funciones auxiliares (*SRP*) únicamente en consultas de desarrollo o refactorización, evitando sobrecargar el contexto de las consultas RAG convencionales.
