@@ -3,30 +3,9 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"math"
 	"os"
 	"sort"
-	"sync"
 )
-
-// DocumentoVectorial asocia el chunk de texto con su representación en embedding.
-type DocumentoVectorial struct {
-	Chunk     ChunkTexto
-	Embedding []float32
-}
-
-// ResultadoBusqueda almacena la coincidencia encontrada y su puntuación de similitud.
-type ResultadoBusqueda struct {
-	Documento DocumentoVectorial
-	Similitud float32
-}
-
-// VectorStore maneja el almacenamiento local en memoria y la persistencia en disco (.gob).
-type VectorStore struct {
-	mu         sync.RWMutex
-	Documentos []DocumentoVectorial
-	RutaDisco  string
-}
 
 // NuevoVectorStore inicializa la base vectorial local.
 func NuevoVectorStore(rutaDisco string) *VectorStore {
@@ -34,26 +13,6 @@ func NuevoVectorStore(rutaDisco string) *VectorStore {
 		RutaDisco:  rutaDisco,
 		Documentos: []DocumentoVectorial{},
 	}
-}
-
-// SimilitudCoseno calcula el ángulo de coincidencia entre dos vectores de igual dimensión.
-func SimilitudCoseno(v1, v2 []float32) float32 {
-	if len(v1) != len(v2) || len(v1) == 0 {
-		return 0.0
-	}
-
-	var productoEscalar, normaA, normaB float64
-	for i := range v1 {
-		productoEscalar += float64(v1[i]) * float64(v2[i])
-		normaA += float64(v1[i]) * float64(v1[i])
-		normaB += float64(v2[i]) * float64(v2[i])
-	}
-
-	if normaA == 0 || normaB == 0 {
-		return 0.0
-	}
-
-	return float32(productoEscalar / (math.Sqrt(normaA) * math.Sqrt(normaB)))
 }
 
 // AgregarVector añade un nuevo documento vectorial al almacenamiento en memoria.

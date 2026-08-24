@@ -13,7 +13,7 @@ const (
 	RutaRAG         TipoRuta = "rag"
 	RutaHerramienta TipoRuta = "herramienta"
 	RutaGeneral     TipoRuta = "general"
-	RutaDesarrollo  TipoRuta = "desarrollo" // Nueva constante
+	RutaDesarrollo  TipoRuta = "desarrollo"
 )
 
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
@@ -146,4 +146,25 @@ type IndiceBM25 struct {
 	TermFreqs []map[string]int
 	K1        float64
 	B         float64
+}
+
+// --- ESTRUCTURAS DE VECTORSTORE ---
+
+// DocumentoVectorial asocia el chunk de texto con su representación en embedding.
+type DocumentoVectorial struct {
+	Chunk     ChunkTexto
+	Embedding []float32
+}
+
+// ResultadoBusqueda almacena la coincidencia encontrada y su puntuación de similitud.
+type ResultadoBusqueda struct {
+	Documento DocumentoVectorial
+	Similitud float32
+}
+
+// VectorStore maneja el almacenamiento local en memoria y la persistencia en disco (.gob).
+type VectorStore struct {
+	mu         sync.RWMutex
+	Documentos []DocumentoVectorial
+	RutaDisco  string
 }
