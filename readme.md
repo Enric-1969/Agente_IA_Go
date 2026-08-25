@@ -154,7 +154,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Por qué:** Elimina la necesidad de realizar peticiones de red adicionales a APIs remotas de conteo de tokens (`CountTokens`), conservando la velocidad de respuesta nativa en una única solicitud I/O.
 
 ### 16. Gestión Automática del Ciclo de Vida del Servicio Ollama
-* **Decisión:** Comprobación proactiva del socket local `http://localhost:11434` (`core_ollama_service.go`) al arrancar el agente en `main.go`. Si el *daemon* (servicio en segundo plano) está inactivo, inicia el subproceso `ollama serve` y programa su cierre automático vía `defer` al salir.
-* **Por qué:** Elimina los fallos de conexión por olvido del usuario (`dial tcp: connectex`) y garantiza la disponibilidad del modelo de embeddings tanto en la ingesta inicial como en la inferencia de consultas RAG.
+* **Decisión:** Comprobación proactiva del socket local `http://127.0.0.1:11434` (`core_ollama_service.go`) al arrancar en `main.go`. Si está inactivo, valida la presencia de `ollama` mediante `exec.LookPath`; si existe, inicia `ollama serve` y programa su cierre automático vía `defer`. Si no existe, detiene la ejecución informando el enlace oficial de descarga.
+* **Por qué:** Evita fallos de red (`dial tcp`), previene comportamientos bloqueantes por parte de antivirus al no autodescargar binarios sin permisos, ahorra memoria RAM al salir si inició el servicio y respeta las instancias que el usuario ya tenía abiertas.
 * **Regla de cortesía con el entorno:** Si el agente inicia Ollama por necesidad, se encarga de destruirlo al terminar para evitar procesos huérfanos en RAM. Si Ollama ya estaba abierto previamente por el usuario, el agente lo reutiliza sin alterar su estado al cerrar.
   
