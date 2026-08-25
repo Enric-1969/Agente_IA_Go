@@ -59,6 +59,7 @@ type PeticionGroq struct {
 	Model       string    `json:"model"`
 	Messages    []Mensaje `json:"messages"`
 	Temperature float64   `json:"temperature"`
+	MaxTokens   int       `json:"max_tokens,omitempty"` // Límite de tokens de salida para Groq
 }
 
 type RespuestaGroq struct {
