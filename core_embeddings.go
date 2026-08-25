@@ -22,7 +22,7 @@ type OllamaEmbeddingResponse struct {
 // GenerarEmbedding envía un texto a Ollama local y retorna su representación vectorial []float32.
 func GenerarEmbedding(texto string, modelo string) ([]float32, error) {
 	if modelo == "" {
-		modelo = "all-minilm"
+		modelo = "nomic-embed-text"
 	}
 	// Cambiar localhost por 127.0.0.1
 	url := "http://127.0.0.1:11434/api/embeddings"

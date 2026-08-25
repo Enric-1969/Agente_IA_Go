@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // --- COORDINADOR PRINCIPAL DE INGESTA ---
@@ -77,17 +78,23 @@ func ProcesarDominioIngesta(rutaOrigen, rutaDestinoVS, modeloEmbedding string, v
 		fmt.Printf("📦 Generando embeddings para [%d chunks]: %s\n", len(chunks), relPath)
 
 		// 6. Generar embeddings con Ollama e insertar en el VectorStore
+		huboError := false
 		for _, chunk := range chunks {
 			vec, err := GenerarEmbedding(chunk.Contenido, modeloEmbedding)
 			if err != nil {
 				fmt.Printf("  ⚠️ Error al generar embedding para un chunk de %s: %v\n", relPath, err)
+				huboError = true
 				continue
 			}
 			vs.AgregarVector(chunk, vec)
 			chunksProcesados++
+			time.Sleep(30 * time.Millisecond) // Pausa de 30ms para dar respiro a Ollama
 		}
 
-		nuevoManifest[relPath] = hashActual
+		// Solo marcar el archivo como procesado si no hubo ningun error de embedding
+		if !huboError {
+			nuevoManifest[relPath] = hashActual
+		}
 		return nil
 	})
 
