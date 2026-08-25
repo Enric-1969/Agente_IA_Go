@@ -107,7 +107,7 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 	mensajes = append(mensajes, Mensaje{Role: "system", Content: PromptSistemaBase})
 	mensajes = append(mensajes, historial...)
 
-	modeloActual := gestor.ModeloActivo
+	modeloActual := gestor.ObtenerModeloActivo()
 	fmt.Printf("\n🚀 Consultando a Groq [%s]: '%s'\n%s\n", modeloActual, pregunta, strings.Repeat("-", 60))
 
 	// 6. Envío al proveedor LLM
