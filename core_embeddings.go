@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+// Cliente HTTP reutilizable a nivel de archivo (evita abrir/cerrar conexiones TCP por cada chunk)
+var clienteOllama = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 // OllamaEmbeddingRequest define la estructura para solicitar embeddings a Ollama.
 type OllamaEmbeddingRequest struct {
 	Model  string `json:"model"`
@@ -24,7 +29,6 @@ func GenerarEmbedding(texto string, modelo string) ([]float32, error) {
 	if modelo == "" {
 		modelo = "nomic-embed-text"
 	}
-	// Cambiar localhost por 127.0.0.1
 	url := "http://127.0.0.1:11434/api/embeddings"
 
 	reqBody := OllamaEmbeddingRequest{
@@ -37,8 +41,8 @@ func GenerarEmbedding(texto string, modelo string) ([]float32, error) {
 		return nil, fmt.Errorf("error al serializar solicitud de embedding: %w", err)
 	}
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonBody))
+	// Reutilizamos la conexión activa del cliente global
+	resp, err := clienteOllama.Post(url, "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("error al conectar con Ollama en %s (verifica que el servicio esté activo): %w", url, err)
 	}
