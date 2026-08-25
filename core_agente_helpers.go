@@ -1,3 +1,5 @@
+package main
+
 // EstimarTokensLocal calcula los tokens de entrada aproximados en microsegundos (~3.5 caracteres por token).
 func EstimarTokensLocal(texto string) int {
 	if len(texto) == 0 {
