@@ -23,6 +23,7 @@ Agente_IA_Go/
 ├── core_ingestar.go           # Coordinador principal de ingesta con control de memoria (>50MB)
 ├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
 ├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
+├── core_ollama_service.go    # Autogestión del ciclo de vida y arranque/parada del servicio local Ollama
 ├── core_orquestador_ranking.go  # Pipeline de filtrado Top-N
 ├── core_prompts.go            # Plantillas de sistema, roles y constantes del agente
 ├── core_prompts_helpers.go    # Formateadores y constructores de cadenas de prompts
@@ -151,3 +152,9 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 15. Estimación Pre-Vuelo de Tokens Local de Cero-Latencia
 * **Decisión:** Cálculo heurístico en memoria RAM (`EstimarTokensLocal`) del tamaño del prompt antes de iniciar la llamada HTTP, con capacidad de ajuste dinámico del Top-$K_2$.
 * **Por qué:** Elimina la necesidad de realizar peticiones de red adicionales a APIs remotas de conteo de tokens (`CountTokens`), conservando la velocidad de respuesta nativa en una única solicitud I/O.
+
+### 16. Gestión Automática del Ciclo de Vida del Servicio Ollama
+* **Decisión:** Comprobación proactiva del socket local `http://localhost:11434` (`core_ollama_service.go`) al arrancar el agente en `main.go`. Si el *daemon* (servicio en segundo plano) está inactivo, inicia el subproceso `ollama serve` y programa su cierre automático vía `defer` al salir.
+* **Por qué:** Elimina los fallos de conexión por olvido del usuario (`dial tcp: connectex`) y garantiza la disponibilidad del modelo de embeddings tanto en la ingesta inicial como en la inferencia de consultas RAG.
+* **Regla de cortesía con el entorno:** Si el agente inicia Ollama por necesidad, se encarga de destruirlo al terminar para evitar procesos huérfanos en RAM. Si Ollama ya estaba abierto previamente por el usuario, el agente lo reutiliza sin alterar su estado al cerrar.
+  
