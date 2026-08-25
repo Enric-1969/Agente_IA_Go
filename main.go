@@ -39,8 +39,16 @@ func main() {
 		ModeloActivo:   modelos[0],
 	}
 
-	dirOrigen := "./documentos_entrada"
-	dirVectorStore := "./mis_vectorstores"
+	// Carga de rutas desde el entorno con valores por defecto
+	dirOrigen := os.Getenv("RUTA_DOCS_ORIGEN")
+	if dirOrigen == "" {
+		dirOrigen = "./documentos_entrada"
+	}
+
+	dirVectorStore := os.Getenv("RUTA_VECTORSTORES")
+	if dirVectorStore == "" {
+		dirVectorStore = "./mis_vectorstores"
+	}
 	archivoGOB := filepath.Join(dirVectorStore, "vectorstore.gob")
 	modeloEmbedding := "all-minilm"
 
