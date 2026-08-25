@@ -143,3 +143,11 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 13. Re-Ranking Híbrido y Ponderación por Densidad Léxica (Top-N)
 * **Decisión:** Pipeline dedicado de re-evaluación (`core_orquestador_ranking.go`) y cálculo de densidad léxica (`core_calcular_relevancia.go`) sobre los candidatos devueltos por RRF.
 * **Por qué:** Filtra candidatos ruidosos recalculando la relevancia real de cada fragmento antes de inyectar el contexto al prompt del modelo, optimizando el uso de la ventana de contexto.
+
+### 14. Control Determinista de Salida del LLM (`max_tokens`)
+* **Decisión:** Inclusión explícita del parámetro `MaxTokens` en la estructura nativa `PeticionGroq` mediante la etiqueta `json:"max_tokens,omitempty"`.
+* **Por qué:** Previene respuestas sobre-extendidas o truncamientos inesperados, acotando el consumo de tokens y la latencia de generación del LLM en la API de Groq sin dependencias externas.
+
+### 15. Estimación Pre-Vuelo de Tokens Local de Cero-Latencia
+* **Decisión:** Cálculo heurístico en memoria RAM (`EstimarTokensLocal`) del tamaño del prompt antes de iniciar la llamada HTTP, con capacidad de ajuste dinámico del Top-$K_2$.
+* **Por qué:** Elimina la necesidad de realizar peticiones de red adicionales a APIs remotas de conteo de tokens (`CountTokens`), conservando la velocidad de respuesta nativa en una única solicitud I/O.
