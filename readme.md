@@ -60,7 +60,7 @@ GROQ_MODEL='qwen/qwen3.6-27b'
 GROQ_MODELOS_VALIDOS='qwen/qwen3.6-27b'
 
 # Configuración de Embeddings Locales (Ollama)
-OLLAMA_EMBEDDING_MODEL="all-minilm"
+MODELO_EMBEDDING="nomic-embed-text"
 OLLAMA_HOST="http://localhost:11434"
 
 # Rutas configurables del sistema
@@ -85,16 +85,16 @@ Asegúrate de contar con Go 1.24+ instalado. Para descargar e instalar las depen
 go get github.com/xuri/excelize/v2
 # Lectura y procesamiento de archivos PDF (.pdf)
 go get github.com/ledongthuc/pdf
-# Iniciar el servicio y descargar el modelo de embeddings ligero
-ollama pull all-minilm
+# Iniciar el servicio y descargar el modelo de embeddings local
+ollama pull nomic-embed-text
 ```
 ## 📐 Decisiones de Arquitectura y Diseño
 
 Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocidad de ejecución nativa**, evitando la sobreingeniería y las dependencias pesadas habituales en el ecosistema de IA.
 
 ### 1. Ingesta y Embeddings 100% Locales (Soberanía de Datos)
-* **Decisión:** Comunicación HTTP nativa con **Ollama** (`core_embeddings.go`) en lugar de servicios en la nube.
-* **Por qué:** Garantiza privacidad absoluta (ningún dato sale de la máquina local), elimina costes de API de terceros y suprime la latencia de red externa.
+* **Decisión:** Comunicación HTTP nativa con **Ollama** (`core_embeddings.go`) utilizando el modelo de incrustación `nomic-embed-text` en lugar de servicios en la nube o modelos obsoletos.
+* **Por qué:** Garantiza privacidad absoluta (ningún dato sale de la máquina local), elimina costes de API de terceros, ofrece mayor resolución semántica y suprime la latencia de red externa.
 
 ### 2. VectorStore Nativo en Go Pure + Persistencia Binaria `.gob`
 * **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización en formato binario nativo de Go (`.gob`).
