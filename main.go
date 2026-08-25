@@ -57,8 +57,13 @@ func main() {
 	if dirVectorStore == "" {
 		dirVectorStore = "./mis_vectorstores"
 	}
+
 	archivoGOB := filepath.Join(dirVectorStore, "vectorstore.gob")
-	modeloEmbedding := "all-minilm"
+
+	modeloEmbedding := os.Getenv("MODELO_EMBEDDING")
+	if modeloEmbedding == "" {
+		modeloEmbedding = "nomic-embed-text"
+	}
 
 	_ = os.MkdirAll(dirOrigen, 0755)
 	_ = os.MkdirAll(dirVectorStore, 0755)
