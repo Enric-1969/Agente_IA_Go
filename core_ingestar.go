@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // --- COORDINADOR PRINCIPAL DE INGESTA ---
@@ -88,7 +87,6 @@ func ProcesarDominioIngesta(rutaOrigen, rutaDestinoVS, modeloEmbedding string, v
 			}
 			vs.AgregarVector(chunk, vec)
 			chunksProcesados++
-			time.Sleep(30 * time.Millisecond) // Pausa de 30ms para dar respiro a Ollama
 		}
 
 		// Solo marcar el archivo como procesado si no hubo ningun error de embedding
