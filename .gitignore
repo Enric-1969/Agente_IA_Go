@@ -11,6 +11,8 @@
 config.json
 mis_vectorstores/*.db
 mis_vectorstores/*.sqlite
+mis_vectorstores/*.gob
+mis_vectorstores/*.json
 
 # Archivos del sistema
 .DS_Store
