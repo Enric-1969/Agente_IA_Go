@@ -14,6 +14,14 @@ func main() {
 	fmt.Println("===========================================")
 	fmt.Println("Escribe 'salir' o 'exit' para terminar.")
 
+	// Comprobar y gestionar el ciclo de vida del servicio Ollama
+	cleanupOllama, err := AsegurarOllamaActivo()
+	if err != nil {
+		fmt.Printf("⚠️ Advertencia servicio Ollama: %v\n", err)
+	} else {
+		defer cleanupOllama()
+	}
+
 	apiKey := os.Getenv("GROQ_API_KEY")
 	if apiKey == "" {
 		fmt.Println("❌ Error: GROQ_API_KEY no está configurada en el entorno (.env).")
