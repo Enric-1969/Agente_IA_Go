@@ -24,8 +24,9 @@ func GenerarEmbedding(texto string, modelo string) ([]float32, error) {
 	if modelo == "" {
 		modelo = "all-minilm"
 	}
+	// Cambiar localhost por 127.0.0.1
+	url := "http://127.0.0.1:11434/api/embeddings"
 
-	url := "http://localhost:11434/api/embeddings"
 	reqBody := OllamaEmbeddingRequest{
 		Model:  modelo,
 		Prompt: texto,
