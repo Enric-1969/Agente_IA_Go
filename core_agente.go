@@ -66,8 +66,8 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 		vecConsulta, err := GenerarEmbedding(pregunta, modeloEmbedding)
 		if err == nil {
 			// Valores por defecto o extraídos de la configuración
-			limiteK1 := 10
-			limiteK2 := 3
+			limiteK1 := 16
+			limiteK2 := 6
 			pesoRRF := 0.7
 			pesoDensidad := 0.3
 
@@ -115,6 +115,10 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 	if err != nil {
 		fmt.Printf("❌ Error al comunicarse con Groq: %v\n", err)
 		return
+	}
+
+	if idx := strings.LastIndex(respuesta, "</think>"); idx != -1 {
+		respuesta = strings.TrimSpace(respuesta[idx+len("</think>"):])
 	}
 
 	fmt.Println("\n🤖 Respuesta del Agente:")

@@ -7,38 +7,49 @@ import (
 	"time"
 )
 
-// AsegurarOllamaActivo verifica si Ollama responde en 127.0.0.1:11434.
-// Si no responde, comprueba si el ejecutable está instalado en el sistema antes de iniciar 'ollama serve'.
-// Devuelve una función de limpieza (cleanup) para cerrar el subproceso solo si fue abierto por el agente.
 func AsegurarOllamaActivo() (func(), error) {
 	urlPing := "http://127.0.0.1:11434/api/version"
-	client := http.Client{Timeout: 2 * time.Second}
+	// Reducimos el timeout de 2s a 500ms para no demorar el chequeo inicial
+	client := http.Client{Timeout: 500 * time.Millisecond}
 
 	// 1. Comprobar si Ollama ya está activo
 	resp, err := client.Get(urlPing)
 	if err == nil {
 		resp.Body.Close()
 		fmt.Println("ℹ️  Servicio Ollama detectado en ejecución previa (127.0.0.1:11434).")
-		return func() {}, nil // No se requiere apagar nada al terminar
+		return func() {}, nil
 	}
 
-	// 2. Comprobar si el ejecutable existe en el PATH del sistema operativo
+	// 2. Comprobar ejecutable en PATH
 	_, errPath := exec.LookPath("ollama")
 	if errPath != nil {
-		return nil, fmt.Errorf("❌ Ollama no está instalado en el sistema operativo.\n👉 Por favor, descárgalo e instálalo desde: https://ollama.com/download")
+		return nil, fmt.Errorf("❌ Ollama no está instalado en el sistema operativo.\n👉 Descárgalo en: https://ollama.com/download")
 	}
 
-	// 3. Arrebatar el servicio iniciando el subproceso 'ollama serve'
+	// 3. Levantar servicio local
 	fmt.Println("🔄 Ollama inactivo. Levantando servicio local ('ollama serve')...")
 	cmd := exec.Command("ollama", "serve")
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("error al iniciar el subproceso de Ollama: %w", err)
 	}
 
-	// Esperar brevemente a que el socket levante
-	time.Sleep(3 * time.Second)
+	// Reemplazo de time.Sleep(3s): Polling activo cada 200ms durante máximo 3 segundos
+	ollamaListo := false
+	for i := 0; i < 15; i++ {
+		time.Sleep(200 * time.Millisecond)
+		r, errPing := client.Get(urlPing)
+		if errPing == nil {
+			r.Body.Close()
+			ollamaListo = true
+			break
+		}
+	}
 
-	// Función de limpieza ejecutada mediante defer en main.go
+	if !ollamaListo {
+		_ = cmd.Process.Kill()
+		return nil, fmt.Errorf("el servicio Ollama tardó demasiado en responder en el puerto 11434")
+	}
+
 	cleanup := func() {
 		if cmd.Process != nil {
 			fmt.Println("🧹 Cerrando subproceso de Ollama instanciado por el agente...")

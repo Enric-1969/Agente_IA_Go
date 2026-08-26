@@ -153,8 +153,8 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Decisión:** Cálculo heurístico en memoria RAM (`EstimarTokensLocal`) del tamaño del prompt antes de iniciar la llamada HTTP, con capacidad de ajuste dinámico del Top-$K_2$.
 * **Por qué:** Elimina la necesidad de realizar peticiones de red adicionales a APIs remotas de conteo de tokens (`CountTokens`), conservando la velocidad de respuesta nativa en una única solicitud I/O.
 
-### 16. Gestión Automática del Ciclo de Vida del Servicio Ollama
-* **Decisión:** Comprobación proactiva del socket local `http://127.0.0.1:11434` (`core_ollama_service.go`) al arrancar en `main.go`. Si está inactivo, valida la presencia de `ollama` mediante `exec.LookPath`; si existe, inicia `ollama serve` y programa su cierre automático vía `defer`. Si no existe, detiene la ejecución informando el enlace oficial de descarga.
-* **Por qué:** Evita fallos de red (`dial tcp`), previene comportamientos bloqueantes por parte de antivirus al no autodescargar binarios sin permisos, ahorra memoria RAM al salir si inició el servicio y respeta las instancias que el usuario ya tenía abiertas.
+### 16. Gestión Automática del Ciclo de Vida del Servicio Ollama con Sondeo Activo
+* **Decisión:** Comprobación proactiva de latencia mínima (timeout de 500 ms) en el socket local `http://127.0.0.1:11434` (`core_ollama_service.go`) al arrancar en `main.go`. Si está inactivo, valida la presencia de `ollama` mediante `exec.LookPath`; si existe, inicia `ollama serve` y utiliza un bucle de sondeo activo (active polling a 200 ms) en lugar de esperas fijas (`time.Sleep`), programando su cierre automático vía `defer`. Si no existe, detiene la ejecución informando el enlace oficial de descarga.
+* **Por qué:** Evita fallos de red (`dial tcp`), elimina latencias muertas al arrancar el servicio en milisegundos reales, previene comportamientos bloqueantes de antivirus al no autodescargar binarios sin permisos y ahorra memoria RAM al salir si el agente fue quien instanció el proceso.
 * **Regla de cortesía con el entorno:** Si el agente inicia Ollama por necesidad, se encarga de destruirlo al terminar para evitar procesos huérfanos en RAM. Si Ollama ya estaba abierto previamente por el usuario, el agente lo reutiliza sin alterar su estado al cerrar.
   
