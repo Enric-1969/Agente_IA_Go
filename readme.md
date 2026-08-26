@@ -11,8 +11,8 @@ Agente_IA_Go/
 ├── config_validador.go        # Verificación de compatibilidad con Tool Calling
 ├── config_crea_lista_models.go# Escaneo concurrente y rotación del catálogo activo de Groq
 ├── config_conector_groq.go    # Cliente HTTP nativo, reconexión y fallback de modelos
-├── core_agente.go             # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
-├── core_agente_helpers.go     # Formateo y serialización de contexto RAG para el orquestador
+├── core_agente.go          # Orquestador del ciclo RAG, gestión de memoria y flujo de consultas
+├── core_agente_helpers.go  # Auxiliares del orquestador (estimación local de tokens y lectura blindada de .env)
 ├── core_bm25.go               # Indización y puntuación léxica exactas por palabras clave (BM25)
 ├── core_bm25_helpers.go       # Tokenización, limpieza y normalización de texto aislada para BM25
 ├── core_calcular_relevancia.go   # Cálculo de densidad y re-puntuación
