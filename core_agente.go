@@ -65,11 +65,11 @@ func ProcesarConsulta(pregunta string, gestor *GestorModelos, vs *VectorStore, m
 		fmt.Println("📂 Generando embedding y recuperando candidatos RRF (Fase 1)...")
 		vecConsulta, err := GenerarEmbedding(pregunta, modeloEmbedding)
 		if err == nil {
-			// Valores por defecto o extraídos de la configuración
-			limiteK1 := 16
-			limiteK2 := 6
-			pesoRRF := 0.7
-			pesoDensidad := 0.3
+			// Lectura dinámica desde .env con blindaje contra valores bajos
+			limiteK1 := obtenerEnvInt("LIMITE_CANDIDATOS_RECUPERACION", 16, 16)
+			limiteK2 := obtenerEnvInt("LIMITE_FRAGMENTOS_FINALES", 6, 6)
+			pesoRRF := obtenerEnvFloat("PESO_PUNTUACION_RRF", 0.7)
+			pesoDensidad := obtenerEnvFloat("PESO_DENSIDAD_LEXICA", 0.3)
 
 			// Fase 1: Cobertura amplia (K1 candidatos)
 			candidatos := vs.BuscarHibrido(pregunta, vecConsulta, limiteK1)
