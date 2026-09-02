@@ -21,3 +21,8 @@ func SeleccionarPromptSistema(ruta TipoRuta) string {
 	}
 	return PromptSistemaBase
 }
+
+// FormatearPromptDesarrolloGo inyecta la consulta de programación.
+func FormatearPromptDesarrolloGo(contexto string, consulta string) string {
+	return fmt.Sprintf(PromptRAGDesarrolloGo, contexto, consulta)
+}
