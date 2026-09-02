@@ -96,14 +96,13 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Decisión:** Comunicación HTTP nativa con **Ollama** (`core_embeddings.go`) utilizando el modelo de incrustación `nomic-embed-text` en lugar de servicios en la nube o modelos obsoletos.
 * **Por qué:** Garantiza privacidad absoluta (ningún dato sale de la máquina local), elimina costes de API de terceros, ofrece mayor resolución semántica y suprime la latencia de red externa.
 
-### 2. VectorStore Nativo en Go Pure + Persistencia Binaria `.gob`
-* **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización en formato binario nativo de Go (`.gob`).
-* **Por qué:** Elimina la necesidad de desplegar contenedores Docker o bases de datos externas. El formato `.gob` ofrece una tasa de compresión y velocidad de hidratación superior a JSON. La búsqueda por similitud de coseno en RAM responde en menos de 5 ms sin consumo de tokens de la API.
+### 2. VectorStore Nativo, Filtrado por Metadatos y Concurrencia Reentrante
+* **Decisión:** Base de datos vectorial en memoria (`core_vectorstore.go`) con serialización binaria (`.gob`), filtrado de contexto por origen (`BuscarSimilaresConFiltro`) y separación de métodos privados de lectura sin bloqueo (`buscarSimilaresSinLock`).
+* **Por qué:** Previene contaminación cruzada entre lenguajes (evita que consultas de Python recuperen fragmentos de Go) y elimina *deadlocks* por reentrancia de `sync.RWMutex` en búsquedas híbridas (RRF), respondiendo en <5 ms sin dependencias de Docker.
 
-### 3. Enrutamiento Híbrido de Cero-Coste
-* **Decisión:** Clasificación en dos fases (`core_router.go`): reglas heurísticas en local primero, evaluación por LLM en caso de ambigüedad.
-
-* **Por qué:** Resuelve consultas directas en microsegundos sin consumir tokens de API ni incurrir en latencia de red.
+### 3. Enrutamiento Híbrido Multilenguaje de Cero-Coste
+* **Decisión:** Clasificación en dos fases (`core_router.go` y `core_router_helpers.go`): heurística local agnóstica al lenguaje primero (`codigo`, `script`, `funcion`, `refactoriza`), evaluación por LLM como fallback.
+* **Por qué:** Resuelve intenciones de desarrollo en cualquier lenguaje (Python, JS, Go, Rust) en microsegundos sin consumir tokens de API ni incurrir en latencia de red.
 
 ### 4. Motor Aislado OCR en WASM
 * **Decisión:** Extracción de texto PDF dual (`extractor_pdf.go`) con motor de respaldo OCR bajo WebAssembly.
@@ -137,9 +136,9 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 * **Decisión:** Combinación de búsqueda vectorial semántica con el algoritmo de frecuencia de términos BM25 (`core_bm25.go` y `core_bm25_helpers.go`), fusionados dinámicamente mediante RRF (`core_rrf.go`).
 * **Por qué:** Resuelve las limitaciones del RAG puramente vectorial en consultas que contienen nombres de funciones, códigos de error o identificadores exactos, ofreciendo máxima precisión contextual antes de invocar al modelo.
 
-### 12. Selección Dinámica de Prompts de Sistema por Intención
-* **Decisión:** Inyección condicional del prompt de sistema (`PromptSistemaBase` vs `PromptSistemaDesarrollador`) mediante `SeleccionarPromptSistema` en `core_prompts_helpers.go`, activada tras la clasificación de `RutaDesarrollo`.
-* **Por qué:** Aplica las directrices estrictas de *Clean Code*, modularidad y separación de funciones auxiliares (*SRP*) únicamente en consultas de desarrollo o refactorización, evitando sobrecargar el contexto de las consultas RAG convencionales.
+### 12. Prompts del Sistema Agnósticos y Clean Code Universal
+* **Decisión:** Inyección condicional del prompt de sistema (`PromptSistemaDesarrollador`) mediante `SeleccionarPromptSistema` en `core_prompts_helpers.go`, enfocado puramente en principios universales de Clean Code (SRP, bajo acoplamiento, contexto estricto).
+* **Por qué:** Desacopla la arquitectura de reglas exclusivas de un solo lenguaje, permitiendo aplicar buenas prácticas de software en cualquier stack mientras las directivas específicas (ej. contexto Go) se inyectan únicamente a nivel de usuario.
 
 ### 13. Re-Ranking Híbrido y Ponderación por Densidad Léxica (Top-N)
 * **Decisión:** Pipeline dedicado de re-evaluación (`core_orquestador_ranking.go`) y cálculo de densidad léxica (`core_calcular_relevancia.go`) sobre los candidatos devueltos por RRF.
