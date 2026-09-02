@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 )
 
 // NuevoVectorStore inicializa la base vectorial local.
@@ -67,11 +68,8 @@ func (vs *VectorStore) CargarPersistencia() error {
 	return nil
 }
 
-// BuscarSimilares evalúa el vector de consulta contra toda la base y retorna el Top-K con mayor relevancia.
-func (vs *VectorStore) BuscarSimilares(queryVector []float32, topK int) []ResultadoBusqueda {
-	vs.mu.RLock()
-	defer vs.mu.RUnlock()
-
+// buscarSimilaresSinLock evalúa similitud sin adquirir mutex (asume que el llamador ya tiene el bloqueo RLock).
+func (vs *VectorStore) buscarSimilaresSinLock(queryVector []float32, topK int) []ResultadoBusqueda {
 	if len(vs.Documentos) == 0 {
 		return nil
 	}
@@ -85,7 +83,46 @@ func (vs *VectorStore) BuscarSimilares(queryVector []float32, topK int) []Result
 		})
 	}
 
-	// Ordenamiento descendente por la mejor similitud
+	sort.Slice(resultados, func(i, j int) bool {
+		return resultados[i].Similitud > resultados[j].Similitud
+	})
+
+	if len(resultados) > topK {
+		return resultados[:topK]
+	}
+
+	return resultados
+}
+
+// BuscarSimilares evalúa el vector de consulta contra toda la base y retorna el Top-K con mayor relevancia.
+func (vs *VectorStore) BuscarSimilares(queryVector []float32, topK int) []ResultadoBusqueda {
+	vs.mu.RLock()
+	defer vs.mu.RUnlock()
+	return vs.buscarSimilaresSinLock(queryVector, topK)
+}
+
+// BuscarSimilaresConFiltro evalúa solo los vectores cuyo Origen contenga el filtro especificado (ej: "Go\", "Python\").
+func (vs *VectorStore) BuscarSimilaresConFiltro(queryVector []float32, topK int, filtroOrigen string) []ResultadoBusqueda {
+	vs.mu.RLock()
+	defer vs.mu.RUnlock()
+
+	if len(vs.Documentos) == 0 {
+		return nil
+	}
+
+	var resultados []ResultadoBusqueda
+	for _, doc := range vs.Documentos {
+		if filtroOrigen != "" && !strings.Contains(strings.ToLower(doc.Chunk.Origen), strings.ToLower(filtroOrigen)) {
+			continue
+		}
+
+		sim := SimilitudCoseno(queryVector, doc.Embedding)
+		resultados = append(resultados, ResultadoBusqueda{
+			Documento: doc,
+			Similitud: sim,
+		})
+	}
+
 	sort.Slice(resultados, func(i, j int) bool {
 		return resultados[i].Similitud > resultados[j].Similitud
 	})
@@ -106,8 +143,8 @@ func (vs *VectorStore) BuscarHibrido(pregunta string, queryVector []float32, top
 		return nil
 	}
 
-	// 1. Recuperación vectorial amplia
-	resVector := vs.BuscarSimilares(queryVector, topK*2)
+	// 1. Recuperación vectorial amplia (usando método interno seguro)
+	resVector := vs.buscarSimilaresSinLock(queryVector, topK*2)
 
 	// 2. Recuperación léxica por palabras clave (BM25)
 	indiceBM25 := NuevoIndiceBM25(vs.Documentos)
