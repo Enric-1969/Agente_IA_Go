@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -63,6 +64,11 @@ func main() {
 		dirVectorStore = "./mis_vectorstores"
 	}
 
+	dirHistoricoConversaciones := os.Getenv("RUTA_HISTORICO_CONVERSACIONES")
+	if dirHistoricoConversaciones == "" {
+		dirHistoricoConversaciones = "./Historico_Conversaciones"
+	}
+
 	archivoGOB := filepath.Join(dirVectorStore, "vectorstore.gob")
 
 	modeloEmbedding := os.Getenv("MODELO_EMBEDDING")
@@ -72,6 +78,7 @@ func main() {
 
 	_ = os.MkdirAll(dirOrigen, 0755)
 	_ = os.MkdirAll(dirVectorStore, 0755)
+	_ = os.MkdirAll(dirHistoricoConversaciones, 0755)
 
 	vs := NuevoVectorStore(archivoGOB)
 	if err := vs.CargarPersistencia(); err != nil {
@@ -83,6 +90,26 @@ func main() {
 	memoria := NuevoGestorMemoria(6)
 	_ = ProcesarDominioIngesta(dirOrigen, dirVectorStore, modeloEmbedding, vs)
 
+	// Helper para sanitizar el asunto y generar la ruta
+	obtenerRutaExportacion := func(asunto string) string {
+		timestamp := time.Now().Format("2006-01-02_15-04-05")
+
+		asuntoLimpio := strings.TrimSpace(asunto)
+		asuntoLimpio = strings.ReplaceAll(asuntoLimpio, " ", "_")
+		for _, char := range []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|"} {
+			asuntoLimpio = strings.ReplaceAll(asuntoLimpio, char, "")
+		}
+
+		var nombreFichero string
+		if asuntoLimpio != "" {
+			nombreFichero = fmt.Sprintf("sesion_%s_%s.md", timestamp, asuntoLimpio)
+		} else {
+			nombreFichero = fmt.Sprintf("sesion_%s.md", timestamp)
+		}
+
+		return filepath.Join(dirHistoricoConversaciones, nombreFichero)
+	}
+
 	// --- CAPTURA ELEGANTE DE CTRL+C (SIGINT / SIGTERM) ---
 	canalSenales := make(chan os.Signal, 1)
 	signal.Notify(canalSenales, os.Interrupt, syscall.SIGTERM)
@@ -90,8 +117,11 @@ func main() {
 	go func() {
 		<-canalSenales
 		fmt.Println("\n\n⚠️ Interrupción detectada (Ctrl+C). Guardando estado y cerrando de forma segura...")
-		_ = ExportarHistorialMarkdown(memoria, "./sesion_guardada.md")
-		fmt.Println("💾 Sesión guardada en ./sesion_guardada.md")
+
+		rutaMD := obtenerRutaExportacion("interrupcion")
+		_ = ExportarHistorialMarkdown(memoria, rutaMD)
+		fmt.Printf("💾 Sesión guardada en: %s\n", rutaMD)
+
 		if cleanupOllama != nil {
 			cleanupOllama()
 		}
@@ -118,8 +148,12 @@ func main() {
 
 		cmdLower := strings.ToLower(preguntaUsuario)
 		if cmdLower == "salir" || cmdLower == "exit" || cmdLower == "quit" {
-			_ = ExportarHistorialMarkdown(memoria, "./sesion_guardada.md")
-			fmt.Println("💾 Sesión guardada automáticamente en ./sesion_guardada.md")
+			fmt.Print("📝 Introduce el asunto o tema de la sesión (Enter para omitir): ")
+			asuntoInput, _ := reader.ReadString('\n')
+
+			rutaMD := obtenerRutaExportacion(asuntoInput)
+			_ = ExportarHistorialMarkdown(memoria, rutaMD)
+			fmt.Printf("💾 Sesión guardada automáticamente en: %s\n", rutaMD)
 			fmt.Println("👋 ¡Hasta luego!")
 			break
 		}
