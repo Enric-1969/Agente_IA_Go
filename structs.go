@@ -21,6 +21,7 @@ const (
 type ConfigApp struct {
 	RutaDocsOrigen               string
 	RutaVectorstores             string
+	RutaHistoricoConversaciones  string
 	GroqAPIKey                   string
 	GroqModel                    string
 	GroqModelosVal               []string
