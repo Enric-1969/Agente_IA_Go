@@ -23,7 +23,8 @@ Agente_IA_Go/
 ├── core_ingestar.go           # Coordinador principal de ingesta con control de memoria (>50MB)
 ├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
 ├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
-├── core_ollama_service.go    # Autogestión del ciclo de vida y arranque/parada del servicio local Ollama
+├── core_memoria_helpers.go    # G
+├── core_ollama_service.go     # Autogestión del ciclo de vida y arranque/parada del servicio local Ollama
 ├── core_orquestador_ranking.go  # Pipeline de filtrado Top-N
 ├── core_prompts.go            # Plantillas de sistema, roles y constantes del agente
 ├── core_prompts_helpers.go    # Formateadores y constructores de cadenas de prompts
