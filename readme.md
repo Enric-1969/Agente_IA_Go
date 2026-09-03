@@ -18,12 +18,11 @@ Agente_IA_Go/
 ├── core_calcular_relevancia.go   # Cálculo de densidad y re-puntuación
 ├── core_embeddings.go         # Cliente HTTP nativo para generación de vectores con Ollama
 ├── core_fragmentar_chunks.go  # Fragmentación UTF-8 segura (runas) y solape de texto
-
 ├── core_herramientas.go       # Catálogo y despachador de herramientas nativas en Go (Tool Calling)
 ├── core_ingestar.go           # Coordinador principal de ingesta con control de memoria (>50MB)
 ├── core_manifest_hash.go      # Gestión de manifest.json, firmas MD5 y validación de cambios
 ├── core_memoria.go            # Gestor de memoria conversacional multi-turno (sliding window)
-├── core_memoria_helpers.go    # G
+├── core_memoria_helpers.go    # Auxiliares de persistencia e impresión de historial
 ├── core_ollama_service.go     # Autogestión del ciclo de vida y arranque/parada del servicio local Ollama
 ├── core_orquestador_ranking.go  # Pipeline de filtrado Top-N
 ├── core_prompts.go            # Plantillas de sistema, roles y constantes del agente
@@ -41,6 +40,7 @@ Agente_IA_Go/
 ├── main.go                    # Punto de entrada CLI/REPL e inicialización del entorno
 ├── documentos_entrada/        # Carpeta de entrada para documentos a procesar
 ├── mis_vectorstores/          # Almacenamiento persistente (.gob y manifest.json)
+├── Historico_Conversaciones/  # Histórico exportado de sesiones (.md) con timestamp y asunto
 ├── .env
 ├── .env.example
 ├── .gitignore
@@ -57,8 +57,8 @@ Antes de ejecutar la aplicación, crea un archivo .env en la raíz del proyecto 
 # 1. Ve a https://console.groq.com/home y crea una cuenta gratuita.
 # 2. Genera una API key en https://console.groq.com/keys.
 GROQ_API_KEY="gsk_tu_clave_aqui"
-GROQ_MODEL='qwen/qwen3.6-27b'
-GROQ_MODELOS_VALIDOS='qwen/qwen3.6-27b'
+GROQ_MODEL='qwen/qwen3.8-27b'
+GROQ_MODELOS_VALIDOS='qwen/qwen3.8-27b'
 
 # Configuración de Embeddings Locales (Ollama)
 MODELO_EMBEDDING="nomic-embed-text"
@@ -69,6 +69,10 @@ OLLAMA_HOST="http://localhost:11434"
 # Linux/macOS: "/var/data/files_ia"
 RUTA_DOCS_ORIGEN="./documentos_entrada"
 RUTA_VECTORSTORES="./mis_vectorstores"
+
+# Ruta para ficheros .md del histórico de conversaciones
+# Windows local/red: "Z:\Historico_Conversaciones" o "C:\MisDocumentos\Historico_Conversaciones"
+RUTA_HISTORICO_CONVERSACIONES="./Historico_Conversaciones"
 
 # Parámetros de Recuperación y Re-Ranking (Two-Stage Retrieval)
 LIMITE_CANDIDATOS_RECUPERACION=16
@@ -161,3 +165,7 @@ Este proyecto fue diseñado priorizando la **portabilidad, privacidad y velocida
 ### 17. Autocuración y Rotación Dinámica de Modelos en RAM (Sistema Anti-Caídas)
 * **Decisión:** Detección automática de errores al hablar con Groq (`config_conector_groq.go`), descartando al instante el modelo fallido de la memoria y pasando a otro activo (`config_crea_lista_models.go`). Si la reserva se agota, consulta a Groq en segundo plano para descubrir y validar nuevos modelos compatibles (`config_validador.go`).
 * **Por qué:** Evita que la aplicación colapse o lance errores si Groq descataloga un modelo (como la retirada de `qwen3.6-27b`). El agente se autorepara solo durante la conversación, garantizando que el usuario nunca se quede colgado ni tenga que reinstalar o modificar el código.
+
+### 18. Exportación Sanitizada e Inmutable del Histórico mediante Entorno y .gitignore (Zero-Config)
+* **Decisión:** Captura automática del historial al finalizar la sesión (`salir` o `Ctrl+C`) guardando el archivo con estampa temporal (`YYYY-MM-DD_HH-MM-SS`) y asunto sanitizado, externalizando la ruta destino (`RUTA_HISTORICO_CONVERSACIONES`) mediante el archivo `.env` (excluido en `.gitignore`) con un valor relativo por defecto (`./Historico_Conversaciones`).
+* **Por qué:** Permite auditar y revisar interacciones previas sin sobrescribir archivos pasados gracias a la estampa temporal, asegurando la persistencia portable en la ruta. Al mismo tiempo, permite utilizar rutas privadas de red o unidades mapeadas (ej. `Z:\Historico_Conversaciones`) en tu entorno local de desarrollo sin exponer la estructura de carpetas privada en GitHub, garantizando una experiencia *zero-config* funcional e inmediata para cualquier usuario que clone el repositorio o ejecute el binario `.exe`.
