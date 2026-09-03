@@ -4,21 +4,26 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 func main() {
 	fmt.Println("===========================================")
 	fmt.Println("=== AGENTE RAG MULTI-DOMINIO ACTIVO (GO) ===")
 	fmt.Println("===========================================")
-	fmt.Println("Escribe 'salir' o 'exit' para terminar.")
+	fmt.Println("Escribe 'salir', 'exit' o 'quit' para terminar.")
 
 	// Comprobar y gestionar el ciclo de vida del servicio Ollama
-	cleanupOllama, err := AsegurarOllamaActivo()
+	var cleanupOllama func()
+	var err error
+
+	cleanupOllama, err = AsegurarOllamaActivo()
 	if err != nil {
 		fmt.Printf("⚠️ Advertencia servicio Ollama: %v\n", err)
-	} else {
+	} else if cleanupOllama != nil {
 		defer cleanupOllama()
 	}
 
@@ -30,7 +35,7 @@ func main() {
 
 	modelosEnv := os.Getenv("GROQ_MODELOS_VALIDOS")
 	if modelosEnv == "" {
-		modelosEnv = "qwen/qwen3.6-27b"
+		modelosEnv = "qwen/qwen3.8-27b"
 	}
 
 	var modelos []string
@@ -78,6 +83,23 @@ func main() {
 	memoria := NuevoGestorMemoria(6)
 	_ = ProcesarDominioIngesta(dirOrigen, dirVectorStore, modeloEmbedding, vs)
 
+	// --- CAPTURA ELEGANTE DE CTRL+C (SIGINT / SIGTERM) ---
+	canalSenales := make(chan os.Signal, 1)
+	signal.Notify(canalSenales, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-canalSenales
+		fmt.Println("\n\n⚠️ Interrupción detectada (Ctrl+C). Guardando estado y cerrando de forma segura...")
+		_ = ExportarHistorialMarkdown(memoria, "./sesion_guardada.md")
+		fmt.Println("💾 Sesión guardada en ./sesion_guardada.md")
+		if cleanupOllama != nil {
+			cleanupOllama()
+		}
+		fmt.Println("👋 ¡Hasta luego!")
+		os.Exit(0)
+	}()
+	// -----------------------------------------------------
+
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("\n💬 Tu pregunta: ")
@@ -87,14 +109,21 @@ func main() {
 		}
 
 		preguntaUsuario = strings.TrimSpace(preguntaUsuario)
+
+		// Si presiona Enter directamente sin escribir texto
+		if preguntaUsuario == "" {
+			fmt.Println("ℹ️ Escribe una pregunta o escribe 'salir' / 'exit' para finalizar la sesión.")
+			continue
+		}
+
 		cmdLower := strings.ToLower(preguntaUsuario)
 		if cmdLower == "salir" || cmdLower == "exit" || cmdLower == "quit" {
+			_ = ExportarHistorialMarkdown(memoria, "./sesion_guardada.md")
+			fmt.Println("💾 Sesión guardada automáticamente en ./sesion_guardada.md")
 			fmt.Println("👋 ¡Hasta luego!")
 			break
 		}
 
-		if preguntaUsuario != "" {
-			ProcesarConsulta(preguntaUsuario, gestor, vs, modeloEmbedding, memoria, dirOrigen)
-		}
+		ProcesarConsulta(preguntaUsuario, gestor, vs, modeloEmbedding, memoria, dirOrigen)
 	}
 }
