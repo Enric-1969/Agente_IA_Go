@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // EstimarTokensLocal calcula los tokens de entrada aproximados en microsegundos (~3.5 caracteres por token)
@@ -36,4 +38,31 @@ func obtenerEnvFloat(clave string, valorPorDefecto float64) float64 {
 		}
 	}
 	return valorPorDefecto
+}
+
+// cargarEnv lee el archivo .env e inyecta las variables en la memoria del proceso
+func cargarEnv(path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		linea := strings.TrimSpace(scanner.Text())
+		if linea == "" || strings.HasPrefix(linea, "#") {
+			continue
+		}
+		partes := strings.SplitN(linea, "=", 2)
+		if len(partes) == 2 {
+			clave := strings.TrimSpace(partes[0])
+			valor := strings.TrimSpace(partes[1])
+			valor = strings.Trim(valor, `"'`)
+			os.Setenv(clave, valor)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return
+	}
 }
