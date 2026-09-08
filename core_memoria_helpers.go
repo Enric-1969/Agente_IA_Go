@@ -15,6 +15,8 @@ func ExportarHistorialMarkdown(memoria *GestorMemoria, rutaDestino string) error
 	}
 
 	var sb strings.Builder
+	// Escribir el BOM de UTF-8 al inicio del archivo
+	sb.WriteString("\xEF\xBB\xBF")
 	sb.WriteString("# 📝 Registro de Sesión del Agente IA\n")
 	sb.WriteString(fmt.Sprintf("**Fecha:** %s\n\n---\n\n", time.Now().Format("2006-01-02 15:04:05")))
 
