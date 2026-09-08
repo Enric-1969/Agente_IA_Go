@@ -12,6 +12,9 @@ import (
 )
 
 func main() {
+
+	cargarEnv(".env") // <--- Carga previa obligatoria del .env en RAM
+
 	fmt.Println("===========================================")
 	fmt.Println("=== AGENTE RAG MULTI-DOMINIO ACTIVO (GO) ===")
 	fmt.Println("===========================================")
@@ -65,6 +68,7 @@ func main() {
 	}
 
 	dirHistoricoConversaciones := os.Getenv("RUTA_HISTORICO_CONVERSACIONES")
+	fmt.Printf("🔍 DEBUG RUTA EN MEMORIA: [%s]\n", dirHistoricoConversaciones)
 	if dirHistoricoConversaciones == "" {
 		dirHistoricoConversaciones = "./Historico_Conversaciones"
 	}
@@ -119,8 +123,11 @@ func main() {
 		fmt.Println("\n\n⚠️ Interrupción detectada (Ctrl+C). Guardando estado y cerrando de forma segura...")
 
 		rutaMD := obtenerRutaExportacion("interrupcion")
-		_ = ExportarHistorialMarkdown(memoria, rutaMD)
-		fmt.Printf("💾 Sesión guardada en: %s\n", rutaMD)
+		if err := ExportarHistorialMarkdown(memoria, rutaMD); err != nil {
+			fmt.Printf("❌ Fallo al guardar la sesión en disco: %v\n", err)
+		} else {
+			fmt.Printf("💾 Sesión guardada en: %s\n", rutaMD)
+		}
 
 		if cleanupOllama != nil {
 			cleanupOllama()
@@ -152,8 +159,12 @@ func main() {
 			asuntoInput, _ := reader.ReadString('\n')
 
 			rutaMD := obtenerRutaExportacion(asuntoInput)
-			_ = ExportarHistorialMarkdown(memoria, rutaMD)
-			fmt.Printf("💾 Sesión guardada automáticamente en: %s\n", rutaMD)
+			if err := ExportarHistorialMarkdown(memoria, rutaMD); err != nil {
+				fmt.Printf("❌ Fallo al guardar la sesión en disco: %v\n", err)
+			} else {
+				fmt.Printf("💾 Sesión guardada automáticamente en: %s\n", rutaMD)
+			}
+
 			fmt.Println("👋 ¡Hasta luego!")
 			break
 		}
