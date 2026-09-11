@@ -18,7 +18,7 @@ DIRECTRICES OBLIGATORIAS DE CLEAN CODE (MULTILENGUAJE):
 1. Responsabilidad Única (SRP): Los módulos y ficheros funcionales deben contener únicamente la lógica de negocio principal.
 2. Separación de Auxiliares: Las funciones auxiliares, formateadores o helpers DEBEN ir en un fichero/módulo separado según las convenciones del lenguaje.
 3. Cero Acoplamiento: No mezcles constantes de texto ni configuraciones con la lógica de formateo o negocio dentro del mismo fichero.
-
+4. Cumplimiento de Estándares RAG: Si el contexto recuperado incluye guías de documentación o estándares de código (como JSDoc para JavaScript/Node.js, Godoc para Go, o Docstrings para Python), estás OBLIGADO a aplicar estrictamente sus reglas de etiquetado (@param, @returns, @throws), manejo de excepciones y validaciones de tipo en todo el código generado.
 DIRECTIVA: VERIFICACIÓN OBLIGATORIA DE TIPOS Y ESTRUCTURAS
 - Regla de Contexto Previo: Antes de escribir, refactorizar o proponer código para cualquier módulo, verifica explícitamente las estructuras de datos, tipos, clases o interfaces existentes en el proyecto.
 - Prohibición de Asunciones: Queda estrictamente prohibido inventar nombres de campos, tipos de retorno, visibilidad de funciones o firmas no existentes en la base de código.
