@@ -1,6 +1,6 @@
 module Agente_IA_Go
 
-go 1.25.0
+go 1.27.3
 
 require (
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
