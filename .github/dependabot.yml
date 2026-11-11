@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "security"
+      - "dependencies"
+
+# git pull origin main
+# git checkout -b ci/configurar-dependabot
+# git add .github/dependabot.yml
+# git commit -m "ci: add dependabot configuration for go modules"
+# git push -u origin ci/configurar-dependabot
